@@ -95,7 +95,7 @@ Valeurs de `status` :
 
 Pour numéroter, prends le plus grand numéro parmi les `id` de `doc/tickets/` et `doc/tickets/done/` (compare les nombres, pas les noms de fichier : `t10` vient après `t9`), plus un.
 
-Le développeur cite les tickets par leur `id` (`t7`), en minuscules ou en majuscules. Toi, chaque fois que tu mentionnes un ticket, écris le nom de son fichier sans l'extension : `t7-renommer-deck`. Le slug suffit au développeur pour savoir de quoi tu parles, sans ouvrir le ticket. Le titre complet reste dans le frontmatter.
+Le développeur cite les tickets par leur `id` (`t7`), en minuscules ou en majuscules. Toi, chaque fois que tu mentionnes un ticket, écris le nom de son fichier sans l'extension, entre backticks pour qu'il ressorte en code inline : `t7-renommer-deck`. Le slug suffit au développeur pour savoir de quoi tu parles, sans ouvrir le ticket. Le titre complet reste dans le frontmatter.
 
 ## Configuration du projet : `doc/ork.md`
 
@@ -190,7 +190,7 @@ Puis vérifie si un ticket `ready` en attente peut maintenant partir.
 - `REVIEW FIRST` vaut `none` ;
 - les tests sont verts après le rebase.
 
-L'intégration réussie est une notification **différée** : « t12-bouton-enregistrer intégré sans relecture (revue auto propre, rien de signalé), 2 commits ». Note-la dans le journal. Si une condition manque, ou si l'intégration s'arrête en route, le ticket reste `in-review` : notification **différée**, avec en une ligne ce qui demande la relecture.
+L'intégration réussie est une notification **différée** : « `t12-bouton-enregistrer` intégré sans relecture (revue auto propre, rien de signalé), 2 commits ». Note-la dans le journal. Si une condition manque, ou si l'intégration s'arrête en route, le ticket reste `in-review` : notification **différée**, avec en une ligne ce qui demande la relecture.
 
 ## 5. Les notifications : deux niveaux
 
@@ -225,7 +225,7 @@ Un ticket `in-review` attend le développeur. Quand il demande à le relire, il 
 1. **Ouverture**, en trois lignes : ce que fait le ticket, les décisions de l'ouvrier, le résultat de la revue auto.
 2. **Un point par message** : d'abord le `remaining` de la revue auto, puis les points `REVIEW FIRST`. Pour chaque point, ouvre toi-même la diff du fichier dans VS Code (voir ci-dessous), puis écris le fichier et sa ligne, suivis de la phrase de l'ouvrier. Termine par `Points restants : N`.
 3. **Sa réponse** : « ok » passe au point suivant. Une remarque va dans `## Review`, puis à l'ouvrier par `SendMessage` (« corrige … »). La relecture reprend à son rapport, sur les seuls points nouveaux ou touchés.
-4. **Après le dernier point** : « J'intègre t12-bouton-enregistrer ? ».
+4. **Après le dernier point** : « J'intègre `t12-bouton-enregistrer` ? ».
 
 **Ouvrir une diff dans VS Code.** Aucun lien ne sait ouvrir une diff : lance la commande toi-même. Le worktree est donné par `git worktree list`.
 ```bash
@@ -295,7 +295,7 @@ Le développeur ne doit pas avoir à dire à quoi il répond. C'est toi qui gèr
 Un **sujet**, c'est tout ce qui attend une réponse du développeur : une question d'un ticket `blocked`, un plan `plan-review`, un échec ou un conflit, une idéation en cours, une question ouverte sur un ticket `idea`.
 
 - **Un seul sujet par message** : le plus urgent. Il reste autoportant : ticket, question, options, recommandation.
-- **Les autres sujets tiennent en une ligne**, à la fin du message, et seulement s'il y en a : `En attente : 2 (t14-export-pdf plan, t15-tri-clients question)`.
+- **Les autres sujets tiennent en une ligne**, à la fin du message, et seulement s'il y en a : « En attente : 2 (`t14-export-pdf` plan, `t15-tri-clients` question) ».
 - **La réponse du développeur porte sur le sujet en cours.** Ne lui demande jamais de préciser à quoi il répond.
 - **« Sujet suivant »** (ou `next`) : le sujet en cours retourne en fin de file, et tu présentes le suivant.
 - **Sujet clos** (réponse notée dans le ticket, ouvrier relancé) : présente directement le suivant.
