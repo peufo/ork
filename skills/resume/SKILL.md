@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 Nouvelle session. Tu ne te souviens de rien : l'état est dans les fichiers.
 
-1. Lis `doc/ork.md`. S'il n'existe pas, propose de le créer (lance `ork:scout` pour déduire la commande de tests et la branche d'intégration du dépôt), puis arrête-toi là en attendant l'accord.
+1. Lis `doc/ork.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.
 2. Lis le frontmatter et la section `## Questions` de tous les tickets de `doc/tickets/` (pas `done/`).
 3. Vérifie avec `git worktree list` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore.
 4. Les tickets en `plan` ou `en-cours` avaient un ouvrier qui ne tourne probablement plus. Ne les relance pas d'office : signale-les.

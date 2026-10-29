@@ -1,7 +1,7 @@
 ---
 id: T-0001
 titre: Skill /ork:init pour configurer un dépôt
-statut: pret
+statut: fait
 priorite: normale
 story:
 plan_requis: false
@@ -39,11 +39,11 @@ Ce qu'il devrait faire :
 - faire trancher le suivi git de `doc/tickets/` (commité ou ignoré).
 
 ## Critères de fin
-- [ ] `skills/init/SKILL.md` existe et couvre la détection et la proposition ci-dessus
-- [ ] Pour un dossier hors convention, l'init pose la question « renommer ou noter », avec le renommage recommandé
-- [ ] Après un renommage, une recherche finale ne trouve plus aucune référence à l'ancien chemin (fichiers générés et `done/` exclus)
-- [ ] `agents/lead.md` renvoie vers `/ork:init` quand la config manque, au lieu de la proposer lui-même
-- [ ] README mis à jour
+- [x] `skills/init/SKILL.md` existe et couvre la détection et la proposition ci-dessus
+- [x] Pour un dossier hors convention, l'init pose la question « renommer ou noter », avec le renommage recommandé
+- [x] Après un renommage, une recherche finale ne trouve plus aucune référence à l'ancien chemin (fichiers générés et `done/` exclus)
+- [x] `agents/lead.md` renvoie vers `/ork:init` quand la config manque, au lieu de la proposer lui-même
+- [x] README mis à jour
 
 ## Plan
 
@@ -52,3 +52,4 @@ Ce qu'il devrait faire :
 ## Journal
 - 2026-10-29 — créé depuis les retours sur Poj
 - 2026-10-29 — dossiers hors convention : demander s'il faut renommer (recommandé, avec mise à jour des références) ou noter. La clé `dossier_stories` est abandonnée. Statut `pret`.
+- 2026-10-29 — implémenté directement par le chef (phase de mise en place) : `skills/init/SKILL.md`, renvois depuis `lead` et `resume`, README. `plugin validate` OK. Pas encore testé en conditions réelles.

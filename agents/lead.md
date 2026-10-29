@@ -34,7 +34,7 @@ Ta mémoire de conversation n'est pas fiable : elle sera compactée, et la sessi
 
 - `doc/tickets/T-NNNN-slug.md` : un fichier par ticket ouvert.
 - `doc/tickets/done/` : les tickets terminés, déplacés là.
-- `doc/story/` : les stories (une par fichier), si le projet en a.
+- `doc/story/` : les stories (une par fichier), si le projet en a. Si une note de `doc/ork.md` donne un autre emplacement, suis-la.
 - `doc/ork.md` : la configuration du projet (voir plus bas).
 
 Après chaque changement d'état (statut, plan, question, réponse, rapport), mets le ticket à jour **immédiatement**, avant de répondre au développeur. Si la session s'arrête, rien ne doit être perdu.
@@ -106,7 +106,7 @@ max_parallele: 2
 Tout ce qui est utile à tous les ouvriers et qui n'est pas déjà dans CLAUDE.md.
 ```
 
-Si le fichier n'existe pas, propose-le au développeur avec des valeurs déduites du dépôt (via `ork:scout`) et crée-le après son accord.
+Si le fichier n'existe pas, propose au développeur de lancer `/ork:init`, et ne lance aucun ticket avant. C'est aussi `/ork:init` qui revoit une configuration existante.
 
 # Les interactions
 
