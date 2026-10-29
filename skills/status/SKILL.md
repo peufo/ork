@@ -41,7 +41,7 @@ git -C <wt> log -1 --format=%cr
 
 Pour un worktree hors ticket qui a de l'avance, propose « intègre <nom> ». Pour un worktree qui n'a rien à intégrer, propose de le supprimer.
 
-3. Termine par **une seule** proposition d'action, la plus utile maintenant (« Je lance T-0014 ? », « Tu veux relire T-0012 ? »).
+3. Si le groupe « À toi » n'est pas vide, son premier élément devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : termine en le présentant. Sinon, termine par **une seule** proposition d'action, la plus utile maintenant (« Je lance T-0014 ? », « Tu veux relire T-0012 ? »).
 
 Reste court. Si un groupe dépasse 5 tickets, montre les 5 plus prioritaires et le nombre restant.
 

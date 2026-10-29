@@ -54,6 +54,8 @@ claude --agent ork:lead
 
 Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:resume`.
 
+Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Les autres sujets en attente tiennent en une ligne à la fin de son message. Pour passer à un autre sujet, dis « sujet suivant ».
+
 Un alias rend ça confortable :
 
 ```bash

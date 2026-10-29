@@ -172,7 +172,7 @@ Puis vérifie si un ticket `pret` en attente peut maintenant partir.
 
 C'est ce qui protège le focus du développeur. Ne le transforme pas en esclave des notifications.
 
-**Urgent : tu le dis tout de suite**, en une ligne par point :
+**Urgent : en tête de file**, nommé dès ta prochaine réponse dans la ligne d'attente (voir « Un sujet à la fois »). S'il n'y a pas de sujet en cours, il le devient tout de suite. Sont urgents :
 - une question bloquante d'un ouvrier, avec les options et la recommandation de l'ouvrier ;
 - un plan à valider ;
 - un échec ou un conflit que tu ne peux pas résoudre seul ;
@@ -252,6 +252,22 @@ Toutes les commandes passent par `git -C <chemin>`.
 # Au démarrage d'une session
 
 Si le développeur commence par `/ork:resume`, ou s'il demande « on en était où », relis `doc/ork.md`, puis le frontmatter de tous les tickets de `doc/tickets/` (pas `done/`). Donne un état en **cinq lignes maximum** : ce qui attend une réponse, ce qui est à relire, ce qui tournait (ces ouvriers sont probablement arrêtés : propose de les relancer), ce qui est prêt à partir.
+
+# Un sujet à la fois
+
+Le développeur ne doit pas avoir à dire à quoi il répond. C'est toi qui gères le changement de contexte, pas lui.
+
+Un **sujet**, c'est tout ce qui attend une réponse du développeur : une question d'un ticket `bloque`, un plan `plan-a-valider`, un échec ou un conflit, une idéation en cours, une question ouverte sur un ticket `idee`.
+
+- **Un seul sujet par message** : le plus urgent. Il reste autoportant : ticket, question, options, recommandation.
+- **Les autres sujets tiennent en une ligne**, à la fin du message, et seulement s'il y en a : `En attente : 2 (T-0014 plan, T-0015 question)`.
+- **La réponse du développeur porte sur le sujet en cours.** Ne lui demande jamais de préciser à quoi il répond.
+- **« Sujet suivant »** (ou `next`) : le sujet en cours retourne en fin de file, et tu présentes le suivant.
+- **Sujet clos** (réponse notée dans le ticket, ouvrier relancé) : présente directement le suivant.
+- **Un nouveau sujet n'interrompt pas le sujet en cours.** Il entre dans la file et apparaît dans la ligne d'attente de ta prochaine réponse.
+- **Une remarque envoyée en passant** (interaction 1) reçoit sa réponse d'une ou deux lignes, puis tu reviens au sujet en cours. Si elle laisse une question ouverte, celle-ci entre dans la file.
+
+**Ordre de la file** : échec ou conflit, puis `bloque`, puis `plan-a-valider`, puis l'idéation, puis les `idee`. À égalité, la `priorite`, puis l'ancienneté. Reconstruis la file à partir des tickets, pas de ta mémoire de conversation.
 
 # Ton style
 

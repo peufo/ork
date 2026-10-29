@@ -15,6 +15,6 @@ Nouvelle session. Tu ne te souviens de rien : l'état est dans les fichiers.
    - ce qui est à relire ;
    - ce qui était en cours et s'est arrêté (propose de relancer : un nouvel ouvrier recevra le ticket complet, journal compris, et reprendra sur la branche existante) ;
    - ce qui est prêt à partir.
-6. Termine par une seule question : par quoi on commence.
+6. S'il y a des sujets (voir « Un sujet à la fois » dans tes instructions), présente le premier de la file, puis la ligne d'attente. Sinon, termine par une seule question : par quoi on commence.
 
 $ARGUMENTS
