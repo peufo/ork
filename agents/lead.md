@@ -49,6 +49,8 @@ statut: pret
 priorite: normale
 story: doc/story/edition-facture.md
 plan_requis: false
+modele: sonnet
+effort: medium
 zones: [src/lib/components/facture, src/routes/factures]
 branche:
 agent:
@@ -137,6 +139,18 @@ Quand des tickets sont `pret`, lance-les **sans redemander l'autorisation**, sau
 - après validation, relance **le même ouvrier** (via `SendMessage` à son identifiant) avec « Plan validé, passe en MODE EXÉCUTION », en ajoutant les corrections éventuelles ;
 - sinon, lance directement en **MODE EXÉCUTION**.
 
+**Modèle et effort** : choisis-les au lancement, passe-les dans les paramètres `model` et `effort` de l'appel, et note-les dans le ticket (`modele:`, `effort:`). Le développeur peut les corriger dans le ticket avant le lancement : sa valeur prime.
+
+| Cas | Modèle | Effort |
+|---|---|---|
+| MODE PLAN | `opus` | `high` |
+| MODE EXÉCUTION sans plan, petit ticket sans doute (1 à 3 fichiers, critères nets, aucune règle « Plan requis quand ») | `sonnet` | `medium` |
+| MODE EXÉCUTION sans plan, tous les autres cas | `opus` | défaut (n'envoie pas `effort`) |
+| Relance après un `ÉCHEC` | un cran au-dessus (`sonnet` → `opus`) | `high` |
+| MODE INTÉGRATION avec un nouvel ouvrier | `opus` | défaut |
+
+En cas de doute entre deux lignes, prends la plus haute : un ouvrier sous-dimensionné qui échoue coûte plus cher qu'un ouvrier trop fort. Un ouvrier relancé par `SendMessage` (plan validé, réponse à une question) garde le modèle et l'effort de son lancement. Si `doc/ork.md` donne d'autres règles, elles priment.
+
 **Le message de délégation** à `ork:worker` contient toujours :
 1. le mode (`MODE PLAN` ou `MODE EXÉCUTION`) ;
 2. le **contenu complet du ticket**, recopié. L'ouvrier travaille dans un worktree qui ne contient pas forcément tes fichiers de tickets non commités ;
@@ -150,7 +164,7 @@ Les rapports arrivent en notification, au format court fixé (voir l'agent `ork:
 - `STATUT: PLAN PRÊT` : plan dans le ticket, statut `plan-a-valider`, notification **urgente** ;
 - `STATUT: BLOQUÉ` : question dans `## Questions`, statut `bloque`, notification **urgente** ;
 - `STATUT: TERMINÉ` : résumé dans le journal, `branche:` remplie, statut `a-relire`, notification **différée** ;
-- `STATUT: ÉCHEC` : cause dans le journal, notification **urgente** avec ta proposition (relancer, découper, abandonner).
+- `STATUT: ÉCHEC` : cause dans le journal, notification **urgente** avec ta proposition (relancer un cran au-dessus, découper, abandonner).
 
 Puis vérifie si un ticket `pret` en attente peut maintenant partir.
 
@@ -216,7 +230,7 @@ Toutes les commandes passent par `git -C <chemin>`.
    - `git merge-base --is-ancestor <branche_integration> <branche>` réussit ;
    - le worktree est propre ;
    - l'ouvrier a rendu `TERMINÉ` avec des tests verts après son rebase.
-4. **Sinon, MODE INTÉGRATION.** Relance l'ouvrier du ticket par `SendMessage` s'il est joignable. Sinon, ou pour un worktree hors ticket, lance un nouvel `ork:worker` avec :
+4. **Sinon, MODE INTÉGRATION.** Relance l'ouvrier du ticket par `SendMessage` s'il est joignable. Sinon, ou pour un worktree hors ticket, lance un nouvel `ork:worker` (modèle `opus`) avec :
    - `MODE INTÉGRATION`, `WORKTREE: <chemin>` et `BRANCHE: <nom>` ;
    - `branche_integration`, la commande de tests et les notes ;
    - le ticket complet, s'il y en a un.
