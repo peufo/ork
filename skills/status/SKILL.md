@@ -24,6 +24,23 @@ Le développeur veut savoir où on en est. Il a choisi ce moment : c'est là que
 **Idées à clarifier**
 - T-NNNN titre
 
+**Worktrees à surveiller** (ce groupe n'apparaît que si l'un d'eux est concerné)
+`git worktree list --porcelain`, hors dépôt principal. Retiens ceux qui :
+- ne sont liés à aucun ticket ouvert (session lancée à part, ou ticket déjà clos) ;
+- n'ont rien à intégrer (propres, et sans avance sur `branche_integration`) ;
+- portent des modifications non commitées.
+
+| worktree | branche | avance / retard | fichiers sales | dernière activité | verrou |
+|---|---|---|---|---|---|
+
+```bash
+git rev-list --left-right --count <branche_integration>...<branche>   # retard, avance
+git -C <wt> status --short | wc -l
+git -C <wt> log -1 --format=%cr
+```
+
+Pour un worktree hors ticket qui a de l'avance, propose « intègre <nom> ». Pour un worktree qui n'a rien à intégrer, propose de le supprimer.
+
 3. Termine par **une seule** proposition d'action, la plus utile maintenant (« Je lance T-0014 ? », « Tu veux relire T-0012 ? »).
 
 Reste court. Si un groupe dépasse 5 tickets, montre les 5 plus prioritaires et le nombre restant.

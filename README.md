@@ -86,7 +86,9 @@ Pour le mode de permission, le mode **auto** (une fois validé dans ton environn
 - **Idéation** : tu parles normalement d'une story. Le chef met à jour `doc/story/…`, propose un découpage en tickets et les crée après ton accord.
 - **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones` des tickets et `max_parallele`. Il lance le mode plan quand il le faut, et sinon l'exécution directe.
 - **Il te dérange seulement pour** une question bloquante, un plan à valider, un échec ou un fait nouveau. Le reste attend ton `/ork:status`.
-- **Relecture** : « montre-moi T-0012 » te donne le résumé, les endroits délicats et la commande de diff. Puis « intègre T-0012 » lance le merge, les tests et l'archivage.
+- **Relecture** : « montre-moi T-0012 » te donne le résumé, les endroits délicats et la commande de diff. Puis « intègre T-0012 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en MODE INTÉGRATION). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
+- **Worktree hors ticket** : « intègre <worktree> » fonctionne aussi pour une session lancée à part. `/ork:status` signale ces worktrees orphelins.
+- **Conventions du projet** : ork reste générique. Ce qui est propre au projet va dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés à régénérer plutôt que fusionner, vérifications supplémentaires selon les zones, style de commit.
 
 ## Le cycle d'un ticket
 

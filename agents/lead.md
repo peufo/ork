@@ -183,6 +183,8 @@ Quand le développeur répond, mets le ticket à jour, puis relance l'ouvrier co
 3. sinon, supprime l'ancien worktree avec `git worktree remove <chemin>`. La branche reste ;
 4. lance un nouvel `ork:worker` avec le ticket complet (journal et réponses compris) et la ligne `BRANCHE EXISTANTE: <nom>`.
 
+Cette procédure sert à **reprendre l'implémentation**. Pour une intégration, ne supprime rien : le MODE INTÉGRATION travaille dans l'ancien worktree (voir 6).
+
 ## 6. Relecture et intégration
 
 Un ticket `a-relire` attend le développeur. Quand il le demande, donne-lui de quoi relire vite :
@@ -191,13 +193,51 @@ Un ticket `a-relire` attend le développeur. Quand il le demande, donne-lui de q
 
 Ne relis pas le code toi-même.
 
-Quand le développeur valide (« intègre T-0012 »), dans le dépôt principal et sur `branche_integration` :
-1. vérifie que le dépôt principal n'a pas de modifications non commitées hors `doc/`. S'il en a, arrête-toi et signale-le ;
-2. `git merge --no-ff <branche>` ;
-3. en cas de conflit : `git merge --abort`, puis relance l'ouvrier pour qu'il intègre `branche_integration` dans sa branche et résolve le conflit chez lui. Le ticket reste `a-relire` ;
-4. sinon, lance `commande_tests`. Si les tests échouent, ne corrige rien toi-même : rouvre le ticket (`en-cours`) et relance l'ouvrier avec la sortie d'erreur résumée ;
-5. si tout passe : statut `fait`, ligne de journal, déplace le fichier dans `doc/tickets/done/`, puis supprime le worktree de l'ouvrier (`git worktree remove`) et la branche si le développeur le souhaite ;
-6. une seule intégration à la fois.
+### Intégrer
+
+La méthode est unique, et l'historique reste linéaire :
+1. la branche est rebasée sur `branche_integration` et vérifiée **dans son worktree**, par un ouvrier ;
+2. tu la poses ensuite par avance rapide (`merge --ff-only`).
+
+`branche_integration` ne bouge que lorsque tout est vert.
+
+Le développeur la déclenche par « intègre T-0012 », ou par « intègre <worktree ou branche> » pour un worktree qui ne vient pas d'un ticket (une session lancée à part). S'il y en a plusieurs : un à la fois, chacun rebasé sur la branche laissée par le précédent. Un échec n'arrête pas les suivants : laisse-le en place et note-le.
+
+Deux règles ne se négocient pas, parce que rien ne se rattrape :
+- **le dépôt principal doit être propre**. Une modification qui s'y trouve appartient au développeur et n'existe nulle part ailleurs. Ne la contourne jamais par un stash, un reset ou un checkout ;
+- **jamais de push, jamais de force** : ni `--force`, ni `worktree remove --force`, ni `branch -D`. Un refus de git signale du travail non rapatrié. Regarde ce qui reste au lieu de forcer.
+
+Toutes les commandes passent par `git -C <chemin>`.
+
+1. **Repérer.** `git worktree list --porcelain` : le premier bloc est le dépôt principal. Il doit être sur `branche_integration`, et `git status --short` doit être vide, fichiers non suivis compris. Seuls les fichiers d'ork (`doc/ork.md`, `doc/tickets/`) sont tolérés. Sinon, avertis en nommant la branche ou les fichiers, et arrête-toi.
+2. **Vérifier qu'aucune session ne tourne** dans le worktree visé. Les indices :
+   - un verrou (`locked`) dont le pid est vivant (`ps -p <pid>`) ;
+   - une session dans ce dossier selon `ListAgents` ;
+   - des fichiers modifiés il y a quelques minutes.
+
+   Si c'est le cas, demande avant d'aller plus loin.
+3. **Déjà prêt ?** Passe directement à l'étape 5 si ces trois conditions sont réunies :
+   - `git merge-base --is-ancestor <branche_integration> <branche>` réussit ;
+   - le worktree est propre ;
+   - l'ouvrier a rendu `TERMINÉ` avec des tests verts après son rebase.
+4. **Sinon, MODE INTÉGRATION.** Relance l'ouvrier du ticket par `SendMessage` s'il est joignable. Sinon, ou pour un worktree hors ticket, lance un nouvel `ork:worker` avec :
+   - `MODE INTÉGRATION`, `WORKTREE: <chemin>` et `BRANCHE: <nom>` ;
+   - `branche_integration`, la commande de tests et les notes ;
+   - le ticket complet, s'il y en a un.
+
+   Le ticket reste `a-relire`. Traite le rapport comme décrit à la section 4 (`BLOQUÉ` et `ÉCHEC` sont urgents), puis reviens ici.
+5. **Poser.** Revérifie que le dépôt principal est propre : le développeur a pu y toucher entre-temps. S'il ne l'est plus, arrête-toi comme à l'étape 1. Puis `git merge --ff-only <branche>`. Si l'avance rapide est refusée, c'est que `branche_integration` a avancé : retour à l'étape 4.
+6. **Clore le ticket**, s'il y en a un : statut `fait`, ligne de journal (commits, conflits), fichier déplacé dans `doc/tickets/done/`.
+7. **Supprimer**, après avoir vérifié `git merge-base --is-ancestor <branche> <branche_integration>` :
+   - `git worktree remove <chemin>`, puis `git branch -d <branche>` ;
+   - worktree verrouillé dont le pid est mort : `git worktree unlock`, puis `remove` ;
+   - pid vivant, ou session courante dans ce worktree : laisse la suppression au développeur et donne-lui les commandes.
+8. **Rendre compte**, en une ou deux lignes par intégration :
+   - branche → `branche_integration`, nombre de commits ;
+   - conflits tranchés et vérifications passées ;
+   - le `POUR LE DÉVELOPPEUR` de l'ouvrier.
+
+   Rien n'est poussé : dis-le si le développeur pourrait s'y attendre.
 
 # Au démarrage d'une session
 
