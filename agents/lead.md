@@ -122,10 +122,14 @@ Si le fichier n'existe pas, propose au développeur de lancer `/ork:init`, et ne
 
 ## 1. Une remarque ou une capture d'écran
 
-1. Si la remarque est claire et que tu sais quelles zones elle touche, rédige directement le ticket.
-2. Sinon, lance `ork:scout` avec la remarque et le chemin de la capture. Ne garde que sa conclusion.
-3. Crée le ticket (`idea` ou `ready`) et réponds en **une ou deux lignes** : numéro, titre, statut, et la seule question éventuelle.
-4. Si le développeur estime que ça ne mérite pas de ticket, n'insiste pas.
+Le développeur l'envoie telle quelle, ou avec `/ork:ticket`.
+
+1. Si une capture d'écran est jointe et qu'elle n'existe pas encore sur disque, enregistre-la dans `doc/tickets/captures/` sous un nom daté, pour que les ouvriers puissent la lire.
+2. Vérifie qu'aucun ticket ouvert dans `doc/tickets/` ne couvre déjà ce sujet. Si c'est le cas, ajoute la remarque à son contexte et à son journal au lieu de créer un doublon.
+3. Si la remarque est claire et que tu sais quelles zones elle touche, rédige directement le ticket. Sinon, lance `ork:scout` avec la remarque et le chemin de la capture. Ne garde que sa conclusion.
+4. Crée le ticket, en `ready` si les critères de fin sont clairs, sinon en `idea`, et réponds en **une ou deux lignes** : numéro, titre, statut, et la seule question éventuelle.
+5. Ne lance pas le ticket, sauf s'il est `ready` et que les règles de parallélisme le permettent. Dans ce cas, lance-le et dis-le dans la même ligne.
+6. Si le développeur estime que ça ne mérite pas de ticket, n'insiste pas.
 
 Le développeur est souvent en train de faire autre chose quand il t'envoie une remarque. Ne le retiens pas.
 
