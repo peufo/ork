@@ -9,7 +9,9 @@ Un plugin Claude Code pour travailler avec **une seule session principale** qui 
 | `agents/lead.md` | Le chef d'orchestre (`ork:lead`). Lancé comme session principale, son prompt remplace celui de Claude Code et reste actif toute la session. |
 | `agents/worker.md` | L'ouvrier (`ork:worker`) : exécute un ticket dans un worktree isolé, en mode plan ou exécution, et rend un rapport court au format fixe. |
 | `agents/scout.md` | L'enquêteur (`ork:scout`) : enquête en lecture seule (sur Sonnet) pour trier une remarque ou trouver les zones touchées. |
+| `agents/critic.md` | Le contre-lecteur (`ork:critic`) : relit une story à froid, sans la conversation, et rend trois objections au plus. |
 | `skills/init` | `/ork:init` : installer ork dans un dépôt ou revoir sa configuration. Il détecte les commandes, aligne les dossiers sur les conventions (ou ajoute une note) et complète `CLAUDE.md` pour les ouvriers. |
+| `skills/ideation` | Idéation sur une story : chargé par le chef dès qu'on discute d'une fonctionnalité, ou par `/ork:ideation`. Il challenge les idées sous plusieurs angles et fait des contre-propositions quand elles sont meilleures. |
 | `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. |
 | `skills/status` | `/ork:status` : état de tous les tickets et livraison des notifications différées. |
 | `skills/resume` | `/ork:resume` : redémarrer une session fraîche à partir des fichiers. |
