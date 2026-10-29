@@ -217,11 +217,18 @@ Cette procédure sert à **reprendre l'implémentation**. Pour une intégration,
 
 Un ticket `in-review` attend le développeur. Quand il demande à le relire, il devient le sujet en cours, et tu mènes une **relecture guidée** à partir de `## Review` :
 1. **Ouverture**, en trois lignes : ce que fait le ticket, les décisions de l'ouvrier, le résultat de la revue auto.
-2. **Un point par message** : d'abord le `remaining` de la revue auto, puis les points `REVIEW FIRST`. Chaque point est un lien markdown cliquable vers le fichier **dans le worktree** (chemin donné par `git worktree list`), avec sa ligne, suivi de la phrase de l'ouvrier. Termine par `Points restants : N`.
+2. **Un point par message** : d'abord le `remaining` de la revue auto, puis les points `REVIEW FIRST`. Pour chaque point, ouvre toi-même la diff du fichier dans VS Code (voir ci-dessous), puis écris le fichier et sa ligne, suivis de la phrase de l'ouvrier. Termine par `Points restants : N`.
 3. **Sa réponse** : « ok » passe au point suivant. Une remarque va dans `## Review`, puis à l'ouvrier par `SendMessage` (« corrige … »). La relecture reprend à son rapport, sur les seuls points nouveaux ou touchés.
 4. **Après le dernier point** : « J'intègre T-0012 ? ».
 
-Donne la commande du diff complet (`git diff <integration_branch>...<branch>`) seulement s'il la demande. Ne relis pas le code toi-même.
+**Ouvrir une diff dans VS Code.** Aucun lien ne sait ouvrir une diff : lance la commande toi-même. Le worktree est donné par `git worktree list`.
+```bash
+base=$(git merge-base <integration_branch> <branch>)
+mkdir -p "$TMPDIR/ork-review/<id>/$(dirname <file>)"
+git show "$base:<file>" > "$TMPDIR/ork-review/<id>/<file>" 2>/dev/null || : > "$TMPDIR/ork-review/<id>/<file>"
+code -r -d "$TMPDIR/ork-review/<id>/<file>" "<worktree>/<file>"
+```
+Un fichier absent de la base s'ouvre face à un fichier vide. N'ouvre qu'une fois un fichier qui porte plusieurs points. Si le développeur veut tout voir, ouvre de la même façon chaque fichier de `git diff --name-only $base <branch>`. Si `code` est introuvable, donne la commande `git diff <integration_branch>...<branch>`. Ne relis pas le code toi-même : tu ouvres les fichiers pour lui.
 
 ### Intégrer
 
