@@ -25,6 +25,9 @@ Ce qui est propre au projet ne va pas dans `doc/ork.md`, mais dans le `CLAUDE.md
 - Si `doc/ork.md` existe, tu es en **révision** : lis-le, et ne propose ensuite que les écarts entre ce fichier et ce que tu détectes.
 - Sinon, c'est une **installation**.
 - Note la branche courante et `git status --short`. Ne touche pas aux modifications que tu y trouves.
+- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches deux réglages :
+  - `"agent": "ork:lead"` : le chef devient la session par défaut du projet ;
+  - `"permissions": { "deny": ["Agent(fork)"] }` : un filet de sécurité contre les forks, qui héritent de toute la conversation du chef.
 
 # 2. Enquête
 
@@ -52,6 +55,7 @@ Présente tout en **un seul message**, en groupant :
 - **Les écarts de dossiers :** chemin actuel → convention, et le nombre de références à mettre à jour.
 - **Ce qui manque à `CLAUDE.md` :** le texte que tu proposes d'y ajouter, dans une section du type « Git, worktrees et intégration ».
 - **Les doublons :** ce qu'il faut en garder (dans `CLAUDE.md`) et ce que tu proposes de supprimer.
+- **Les réglages recommandés** qui manquent, s'il y en a.
 
 Puis fais trancher avec `AskUserQuestion`, en quatre questions au plus par appel :
 
@@ -62,6 +66,9 @@ Puis fais trancher avec `AskUserQuestion`, en quatre questions au plus par appel
   Si des références sont construites ou indirectes, dis-le dans la description : elles ne se remplacent pas mécaniquement, et un ouvrier devra s'en charger dans un ticket.
 - **Suivi git des tickets :** « Commités (Recommandé) », parce que l'historique des tickets suit le code et survit à un changement de machine ; ou « Ignorés par git ».
 - **Les ajouts à `CLAUDE.md` et le sort des doublons**, si tu en as trouvé.
+- **Les réglages recommandés**, s'il en manque : où les écrire ?
+  - « `.claude/settings.local.json` (Recommandé) » : personnel, non commité ;
+  - « `.claude/settings.json` » : commité, donc imposé à tous ceux qui ouvrent le dépôt.
 - **La configuration**, si un choix reste ambigu (par exemple deux branches d'intégration plausibles).
 
 # 4. Appliquer
@@ -77,7 +84,8 @@ Dans cet ordre, uniquement ce qui a été accepté.
 3. **Écrire `doc/ork.md`.** En révision, ne change que ce qui a été accepté et garde le reste tel quel.
 4. **Créer les dossiers** `doc/tickets/`, `doc/tickets/captures/` et `doc/tickets/done/`. S'ils sont commités, ajoute un `.gitkeep` dans chaque dossier vide. S'ils sont ignorés, ajoute `doc/tickets/` au `.gitignore`.
 5. **Compléter `CLAUDE.md`** avec le texte accepté.
-6. **Traiter les doublons :** une fois leur contenu propre au projet passé dans `CLAUDE.md`, supprime ceux dont la suppression a été acceptée.
+6. **Ajouter les réglages** acceptés dans le fichier choisi. Fusionne-les avec le contenu existant : ajoute à `permissions.deny` sans remplacer la liste, et garde les autres clés. Vérifie ensuite que le fichier reste du JSON valide.
+7. **Traiter les doublons :** une fois leur contenu propre au projet passé dans `CLAUDE.md`, supprime ceux dont la suppression a été acceptée.
 
 # 5. Commiter
 
@@ -88,6 +96,6 @@ Propose un commit de ces seuls changements, sur la branche courante, dans le sty
 En cinq lignes au plus :
 - la configuration retenue ;
 - les dossiers renommés et le nombre de références mises à jour (ou la note ajoutée) ;
-- ce qui a été ajouté à `CLAUDE.md` et ce qui a été supprimé ;
+- ce qui a été ajouté à `CLAUDE.md` et ce qui a été supprimé, ainsi que les réglages ajoutés ;
 - les tickets créés, s'il y en a ;
-- la suite : `/reload-plugins` si tu as modifié des skills du projet, puis `/ork:ticket` ou une story pour commencer.
+- la suite : si tu as ajouté `agent`, redémarrer Claude Code pour qu'il s'applique ; `/reload-plugins` si tu as modifié des skills du projet ; puis `/ork:ticket` ou une story pour commencer.
