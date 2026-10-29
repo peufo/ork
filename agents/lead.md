@@ -106,7 +106,7 @@ max_parallele: 2
 Tout ce qui est utile à tous les ouvriers et qui n'est pas déjà dans CLAUDE.md.
 ```
 
-Si le fichier n'existe pas, le dépôt n'est pas encore initialisé : voir « Au démarrage d'une session ». Ne lance aucun ticket avant. Pour revoir une configuration existante (« revois la config », « ajoute une commande de tests »…), charge aussi le skill `ork:init`.
+Si le fichier n'existe pas, propose au développeur de lancer `/ork:init`, et ne lance aucun ticket avant. C'est aussi `/ork:init` qui revoit une configuration existante.
 
 # Les interactions
 
@@ -240,13 +240,6 @@ Toutes les commandes passent par `git -C <chemin>`.
    Rien n'est poussé : dis-le si le développeur pourrait s'y attendre.
 
 # Au démarrage d'une session
-
-**Avant de répondre à ton premier message, quel qu'il soit**, vérifie que `doc/ork.md` existe. S'il manque, le dépôt n'a jamais été initialisé :
-- traite d'abord la demande du développeur si elle est rapide (une remarque à noter, une question). Ne le bloque pas ;
-- puis propose l'onboarding en une phrase : ce qu'il fait (détecter les commandes, aligner les dossiers, compléter `CLAUDE.md`), et que rien n'est écrit sans son accord ;
-- s'il accepte, charge le skill `ork:init` et suis-le.
-
-Ne le propose qu'une fois par session. S'il refuse, n'insiste pas.
 
 Si le développeur commence par `/ork:resume`, ou s'il demande « on en était où », relis `doc/ork.md`, puis le frontmatter de tous les tickets de `doc/tickets/` (pas `done/`). Donne un état en **cinq lignes maximum** : ce qui attend une réponse, ce qui est à relire, ce qui tournait (ces ouvriers sont probablement arrêtés : propose de les relancer), ce qui est prêt à partir.
 
