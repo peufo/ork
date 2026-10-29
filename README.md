@@ -13,8 +13,7 @@ Un plugin Claude Code pour travailler avec **une seule session principale** qui 
 | `skills/init` | `/ork:init` : installer ork dans un dépôt ou revoir sa configuration. Il détecte les commandes, aligne les dossiers sur les conventions (ou ajoute une note) et complète `CLAUDE.md` pour les ouvriers. |
 | `skills/ideation` | Idéation sur une story : chargé par le chef dès qu'on discute d'une fonctionnalité, ou par `/ork:ideation`. Il challenge les idées sous plusieurs angles et fait des contre-propositions quand elles sont meilleures. |
 | `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. |
-| `skills/status` | `/ork:status` : état de tous les tickets et livraison des notifications différées. |
-| `skills/resume` | `/ork:resume` : redémarrer une session fraîche à partir des fichiers. |
+| `skills/status` | `/ork:status` : état de tous les tickets, au démarrage d'une session comme en cours de journée, et livraison des notifications différées. |
 
 Rien de tout ça ne va dans le dépôt du client. Dans le dépôt, il n'y a que des **données** en Markdown :
 
@@ -52,7 +51,7 @@ Dans le dépôt du projet :
 claude --agent ork:lead
 ```
 
-Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:resume`.
+Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:status`.
 
 Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Les autres sujets en attente tiennent en une ligne à la fin de son message. Pour passer à un autre sujet, dis « sujet suivant ».
 
@@ -86,7 +85,7 @@ Pour le mode de permission, le mode **auto** (une fois validé dans ton environn
 
 ## Une journée type
 
-- **Le matin** : `ork`, puis `/ork:resume`. Cinq lignes d'état, une question : par quoi on commence ?
+- **Le matin** : `ork`, puis `/ork:status`. L'état des tickets (ceux qui tournaient hier sont signalés comme arrêtés), puis une seule question ou proposition.
 - **Tu remarques un truc** : `/ork:ticket le bouton reste actif pendant l'envoi`, avec une capture collée. Tu reçois une ligne en retour et tu retournes à ce que tu faisais.
 - **Idéation** : tu parles normalement d'une story. Le chef met à jour `doc/story/…`, propose un découpage en tickets et les crée après ton accord.
 - **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones` des tickets et `max_parallel`. Il lance le mode plan quand il le faut, et sinon l'exécution directe.
@@ -116,7 +115,7 @@ Chaque ticket a son statut en frontmatter, donc tu peux ouvrir `doc/` comme coff
 - **Le worktree d'un ouvrier part de la branche par défaut du dépôt**, pas de la branche courante. L'ouvrier commence donc par s'aligner sur la `integration_branch` de `doc/ork.md`. Seul ce qui y est **commité** lui parvient : commite avant de lancer un ticket qui dépend d'un changement récent.
 - **Les tickets ne sont écrits que par le chef**, dans le dépôt principal. Les ouvriers reçoivent le ticket recopié dans leur message, parce que leur worktree ne contient pas les fichiers non commités.
 - **Les agents d'un plugin ignorent** les champs `permissionMode`, `hooks` et `mcpServers`. Si tu en as besoin plus tard, copie l'agent concerné dans `~/.claude/agents/`.
-- **`initialPrompt` ne s'applique pas aux agents de plugin**, d'où le `/ork:resume` à taper au démarrage.
+- **`initialPrompt` ne s'applique pas aux agents de plugin**, d'où le `/ork:status` à taper au démarrage.
 - **Le chef n'a pas de restriction d'outils**. La règle « je ne lis jamais de code » est une consigne, pas un verrou. Si tu veux la verrouiller, ajoute dans `lead.md` un champ `tools:` qui exclut `Edit` et `Write`. Il ne pourrait alors plus écrire les tickets lui-même : à tester si ça devient un problème.
 - **Coût** : plusieurs ouvriers en parallèle consomment ta limite plus vite. `max_parallel: 2` est un bon départ.
 

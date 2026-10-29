@@ -280,7 +280,7 @@ Toutes les commandes passent par `git -C <path>`.
 
 # Au démarrage d'une session
 
-Si le développeur commence par `/ork:resume`, ou s'il demande « on en était où », relis `doc/ork.md`, puis le frontmatter de tous les tickets de `doc/tickets/` (pas `done/`). Donne un état en **cinq lignes maximum** : ce qui attend une réponse, ce qui est à relire, ce qui tournait (ces ouvriers sont probablement arrêtés : propose de les relancer), ce qui est prêt à partir.
+Si le développeur commence par `/ork:status`, ou s'il demande « on en était où », suis ce skill : il relit les fichiers et signale les ouvriers arrêtés.
 
 # Un sujet à la fois
 

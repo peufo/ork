@@ -1,21 +1,26 @@
 ---
 name: status
-description: Faire le point sur tous les tickets ouverts et livrer les notifications différées.
+description: Faire le point sur les tickets ouverts, au démarrage d'une session comme en cours de journée, et livrer les notifications différées.
 disable-model-invocation: true
 ---
 
-Le développeur veut savoir où on en est. Il a choisi ce moment : c'est là que tu livres tout ce que tu as gardé en différé.
+Le développeur veut savoir où on en est : au démarrage d'une session, ou en cours de journée. Il a choisi ce moment : c'est là que tu livres tout ce que tu as gardé en différé.
 
-1. Relis le frontmatter de tous les tickets de `doc/tickets/` (pas `done/`). Ne te fie pas à ta mémoire de conversation.
-2. Réponds avec cette structure, en omettant les groupes vides :
+1. Lis `doc/ork.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.
+2. Relis le frontmatter et la section `## Questions` de tous les tickets de `doc/tickets/` (pas `done/`). Vérifie avec `git worktree list --porcelain` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore. Ne te fie pas à ta mémoire de conversation.
+3. Un ticket en `planning` ou `in-progress` pour lequel tu n'as lancé aucun ouvrier dans cette session est **arrêté** : son ouvrier ne tourne plus. En début de session, c'est le cas de tous. Ne le relance pas d'office : signale-le.
+4. Réponds avec cette structure, en omettant les groupes vides :
 
 **À toi** (ce qui attend une décision ou une réponse)
 - T-NNNN titre : la question ou le plan à valider, en une ligne, avec ta recommandation
 
+**Arrêtés**
+- T-NNNN titre : plan ou exécution, ce que dit la fin du journal. Propose de relancer : un nouvel ouvrier recevra le ticket complet, journal compris, et reprendra sur la branche existante (voir « Si l'ouvrier n'est plus joignable » dans tes instructions)
+
 **À relire**
 - T-NNNN titre : résumé en une ligne, et ce qui demande ta relecture (points signalés, `remaining` de la revue auto, plan, `review: required`)
 
-**Intégré sans relecture** (depuis le dernier point)
+**Intégré sans relecture** (depuis le dernier point ; en début de session, les tickets de `done/` dont le journal note une intégration sans relecture depuis le dernier jour de travail)
 - T-NNNN titre : résumé en une ligne
 
 **En cours**
@@ -28,7 +33,7 @@ Le développeur veut savoir où on en est. Il a choisi ce moment : c'est là que
 - T-NNNN titre
 
 **Worktrees à surveiller** (ce groupe n'apparaît que si l'un d'eux est concerné)
-`git worktree list --porcelain`, hors dépôt principal. Retiens ceux qui :
+Hors dépôt principal, retiens les worktrees qui :
 - ne sont liés à aucun ticket ouvert (session lancée à part, ou ticket déjà clos) ;
 - n'ont rien à intégrer (propres, et sans avance sur `integration_branch`) ;
 - portent des modifications non commitées.
@@ -44,7 +49,7 @@ git -C <wt> log -1 --format=%cr
 
 Pour un worktree hors ticket qui a de l'avance, propose « intègre <name> ». Pour un worktree qui n'a rien à intégrer, propose de le supprimer.
 
-3. Si le groupe « À toi » n'est pas vide, son premier élément devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : termine en le présentant. Sinon, termine par **une seule** proposition d'action, la plus utile maintenant (« Je lance T-0014 ? », « Tu veux relire T-0012 ? »).
+5. Si le groupe « À toi » n'est pas vide, son premier élément devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : termine en le présentant. Sinon, termine par **une seule** proposition d'action, la plus utile maintenant (« Je relance T-0013 ? », « Je lance T-0014 ? », « Tu veux relire T-0012 ? »).
 
 Reste court. Si un groupe dépasse 5 tickets, montre les 5 plus prioritaires et le nombre restant.
 
