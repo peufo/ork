@@ -1,0 +1,8 @@
+{
+  "name": "ork",
+  "description": "Une session principale qui orchestre des sous-agents : capture, tickets Markdown, travaux en worktree, questions remontées au bon moment.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Jonas Voisard"
+  }
+}
