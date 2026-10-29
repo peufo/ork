@@ -1,5 +1,5 @@
 ---
-id: T-0001
+id: t1
 title: Skill /ork:init pour configurer un dépôt
 status: done
 priority: normal

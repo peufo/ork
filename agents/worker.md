@@ -22,7 +22,7 @@ Ces gestes ne se rattrapent pas, ou bien ils masquent du travail perdu :
 En INTEGRATION MODE, saute cette section : tu ne travailles pas dans ton propre worktree.
 
 - **Préparation** : si `CLAUDE.md` décrit comment préparer un worktree (installer les dépendances, copier des fichiers d'environnement non versionnés depuis le dépôt principal…), fais-le avant tout le reste.
-- **Nouveau ticket** : ton worktree vient d'être créé depuis la branche par défaut du dépôt, qui n'est pas forcément la branche d'intégration du projet. Aligne-le d'abord avec `git reset --hard <integration_branch>` (la valeur est dans ton message de délégation ; le worktree est vierge, rien n'est perdu). Puis renomme ta branche pour qu'elle soit lisible, `git branch -m ticket/<id>-<short-slug>` (par exemple `ticket/T-0012-bouton-envoi`). Si le nom existe déjà, ajoute un suffixe.
+- **Nouveau ticket** : ton worktree vient d'être créé depuis la branche par défaut du dépôt, qui n'est pas forcément la branche d'intégration du projet. Aligne-le d'abord avec `git reset --hard <integration_branch>` (la valeur est dans ton message de délégation ; le worktree est vierge, rien n'est perdu). Puis renomme ta branche pour qu'elle soit lisible, `git branch -m ticket/<id>-<short-slug>` (par exemple `ticket/t12-bouton-envoi`). Si le nom existe déjà, ajoute un suffixe.
 - **Reprise** (le message contient `EXISTING BRANCH: <name>`) : note le nom de ta branche actuelle, fais `git checkout <name>`, puis supprime la branche temporaire avec `git branch -D <temp-branch>`. Lis le journal du ticket et `git log` de la branche pour voir où le travail s'était arrêté, puis continue.
 
 # PLAN MODE
@@ -106,9 +106,9 @@ Une fois la réponse reçue (l'orchestrateur te relance avec l'historique comple
 Ton dernier message est **uniquement** ce rapport, court. Pas de récit de ton travail, pas de diff, pas de code.
 
 ```
-TICKET: T-0012
+TICKET: t12
 STATUS: DONE | PLAN READY | BLOCKED | FAILED
-BRANCH: ticket/T-0012-bouton-envoi
+BRANCH: ticket/t12-bouton-envoi
 
 SUMMARY:
 - 3 lignes maximum sur ce qui a été fait (ou le plan, en PLAN MODE : voir plus bas)

@@ -12,25 +12,25 @@ Le développeur veut savoir où on en est : au démarrage d'une session, ou en c
 4. Réponds avec cette structure, en omettant les groupes vides :
 
 **À toi** (ce qui attend une décision ou une réponse)
-- T-NNNN titre : la question ou le plan à valider, en une ligne, avec ta recommandation
+- tN titre : la question ou le plan à valider, en une ligne, avec ta recommandation
 
 **Arrêtés**
-- T-NNNN titre : plan ou exécution, ce que dit la fin du journal. Propose de relancer : un nouvel ouvrier recevra le ticket complet, journal compris, et reprendra sur la branche existante (voir « Si l'ouvrier n'est plus joignable » dans tes instructions)
+- tN titre : plan ou exécution, ce que dit la fin du journal. Propose de relancer : un nouvel ouvrier recevra le ticket complet, journal compris, et reprendra sur la branche existante (voir « Si l'ouvrier n'est plus joignable » dans tes instructions)
 
 **À relire**
-- T-NNNN titre : résumé en une ligne, et ce qui demande ta relecture (points signalés, `remaining` de la revue auto, plan, `review: required`)
+- tN titre : résumé en une ligne, et ce qui demande ta relecture (points signalés, `remaining` de la revue auto, plan, `review: required`)
 
 **Intégré sans relecture** (depuis le dernier point ; en début de session, les tickets de `done/` dont le journal note une intégration sans relecture depuis le dernier jour de travail)
-- T-NNNN titre : résumé en une ligne
+- tN titre : résumé en une ligne
 
 **En cours**
-- T-NNNN titre : plan ou exécution, depuis quand
+- tN titre : plan ou exécution, depuis quand
 
 **Prêt à partir**
-- T-NNNN titre : et pourquoi il attend (zones en conflit avec un ticket en cours, limite de parallélisme…)
+- tN titre : et pourquoi il attend (zones en conflit avec un ticket en cours, limite de parallélisme…)
 
 **Idées à clarifier**
-- T-NNNN titre
+- tN titre
 
 **Worktrees à surveiller** (ce groupe n'apparaît que si l'un d'eux est concerné)
 Hors dépôt principal, retiens les worktrees qui :
@@ -49,7 +49,7 @@ git -C <wt> log -1 --format=%cr
 
 Pour un worktree hors ticket qui a de l'avance, propose « intègre <name> ». Pour un worktree qui n'a rien à intégrer, propose de le supprimer.
 
-5. Si le groupe « À toi » n'est pas vide, son premier élément devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : termine en le présentant. Sinon, termine par **une seule** proposition d'action, la plus utile maintenant (« Je relance T-0013 ? », « Je lance T-0014 ? », « Tu veux relire T-0012 ? »).
+5. Si le groupe « À toi » n'est pas vide, son premier élément devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : termine en le présentant. Sinon, termine par **une seule** proposition d'action, la plus utile maintenant (« Je relance t13 ? », « Je lance t14 ? », « Tu veux relire t12 ? »).
 
 Reste court. Si un groupe dépasse 5 tickets, montre les 5 plus prioritaires et le nombre restant.
 
