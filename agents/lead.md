@@ -248,11 +248,13 @@ Toutes les commandes passent par `git -C <path>`.
 
 1. **Repérer.** `git worktree list --porcelain` : le premier bloc est le dépôt principal. Il doit être sur `integration_branch`, et `git status --short` doit être vide, fichiers non suivis compris. Seuls les fichiers d'ork (`doc/ork.md`, `doc/tickets/`) sont tolérés. Sinon, avertis en nommant la branche ou les fichiers, et arrête-toi.
 2. **Vérifier qu'aucune session ne tourne** dans le worktree visé. Les indices :
-   - un verrou (`locked`) dont le pid est vivant (`ps -p <pid>`) ;
+   - un verrou (`locked`) dont le pid est vivant (`ps -p <pid>`) et n'est pas le tien ;
    - une session dans ce dossier selon `ListAgents` ;
    - des fichiers modifiés il y a quelques minutes.
 
    Si c'est le cas, demande avant d'aller plus loin.
+
+   **Ton propre verrou.** Claude Code verrouille le worktree d'un ouvrier avec le pid de la session qui l'a lancé, c'est-à-dire toi, et ne le lève qu'à la fin de ta session. Ton pid est le parent de ton shell : `ps -o ppid= -p $$`. Un verrou à ton pid ne signale donc pas une session dans le worktree. Ce qui compte, c'est que ton ouvrier ait rendu son rapport et ne travaille plus.
 3. **Déjà prêt ?** Passe directement à l'étape 5 si ces trois conditions sont réunies :
    - `git merge-base --is-ancestor <integration_branch> <branch>` réussit ;
    - le worktree est propre ;
@@ -267,8 +269,8 @@ Toutes les commandes passent par `git -C <path>`.
 6. **Clore le ticket**, s'il y en a un : statut `done`, ligne de journal (commits, conflits), fichier déplacé dans `doc/tickets/done/`.
 7. **Supprimer**, après avoir vérifié `git merge-base --is-ancestor <branch> <integration_branch>` :
    - `git worktree remove <path>`, puis `git branch -d <branch>` ;
-   - worktree verrouillé dont le pid est mort : `git worktree unlock`, puis `remove` ;
-   - pid vivant, ou session courante dans ce worktree : laisse la suppression au développeur et donne-lui les commandes.
+   - worktree verrouillé dont le pid est mort, ou dont le pid est le tien (voir l'étape 2) : `git worktree unlock`, puis `remove` ;
+   - pid vivant d'une autre session, ou session courante dans ce worktree : laisse la suppression au développeur et donne-lui les commandes.
 8. **Rendre compte**, en une ou deux lignes par intégration :
    - branche → `integration_branch`, nombre de commits ;
    - conflits tranchés et vérifications passées ;
