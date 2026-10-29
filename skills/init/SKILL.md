@@ -12,7 +12,7 @@ $ARGUMENTS
 
 | Chemin | Rôle |
 |---|---|
-| `doc/ork.md` | configuration : frontmatter (`commande_tests`, `branche_integration`, `max_parallele`), puis les sections `## Plan requis quand` et `## Notes` |
+| `doc/ork.md` | configuration : frontmatter (`test_command`, `integration_branch`, `max_parallel`, `auto_review`, `review`), puis les sections `## Plan required when` et `## Notes` |
 | `doc/story/` | les stories, une par fichier |
 | `doc/tickets/` | les tickets ouverts |
 | `doc/tickets/captures/` | les captures d'écran jointes |
@@ -33,9 +33,9 @@ Ce qui est propre au projet ne va pas dans `doc/ork.md`, mais dans le `CLAUDE.md
 
 Lance **un seul** `ork:scout`, avec ces questions. Garde sa conclusion, pas le détail.
 
-1. **Commandes :** quelles commandes vérifient le projet (types, lint, tests, contrat ou code généré) ? Comment les lance la CI (`.github/workflows/`, etc.) ? Propose une `commande_tests` unique, enchaînée avec `&&`.
+1. **Commandes :** quelles commandes vérifient le projet (types, lint, tests, contrat ou code généré) ? Comment les lance la CI (`.github/workflows/`, etc.) ? Propose une `test_command` unique, enchaînée avec `&&`.
 2. **Branche d'intégration :** sur quelle branche le travail quotidien est-il posé ? Indices : branche courante, branche par défaut du remote, branches de la CI, conventions écrites dans `CLAUDE.md` ou dans la doc.
-3. **Dossiers :** quels dossiers existants jouent l'un des rôles du tableau ci-dessus sous un autre nom (par exemple `doc/stories/`, `docs/`, `tickets/`) ? Pour chacun, liste **toutes** ses références dans les fichiers suivis, sauf `doc/tickets/done/` (`git grep -n -I '<chemin>'`), en distinguant :
+3. **Dossiers :** quels dossiers existants jouent l'un des rôles du tableau ci-dessus sous un autre nom (par exemple `doc/stories/`, `docs/`, `tickets/`) ? Pour chacun, liste **toutes** ses références dans les fichiers suivis, sauf `doc/tickets/done/` (`git grep -n -I '<path>'`), en distinguant :
    - les chemins écrits en clair, qu'on peut remplacer mécaniquement ;
    - les chemins construits ou indirects (concaténation, glob, variable).
 4. **`CLAUDE.md` :** décrit-il ces quatre points ? Pour chaque point absent, ce que tu as pu déduire du dépôt :
@@ -51,7 +51,7 @@ Lance **un seul** `ork:scout`, avec ces questions. Garde sa conclusion, pas le d
 
 Présente tout en **un seul message**, en groupant :
 
-- **La configuration proposée :** le frontmatter complet, puis les règles « Plan requis quand » adaptées au dépôt (modèle de données, API publique, auth, build, nombre de fichiers). Pour `max_parallele`, propose `1` la première semaine. Si une ressource partagée a été trouvée, dis pourquoi le parallélisme est risqué.
+- **La configuration proposée :** le frontmatter complet, puis les règles « Plan required when » adaptées au dépôt (modèle de données, API publique, auth, build, nombre de fichiers). Pour `max_parallel`, propose `1` la première semaine. Si une ressource partagée a été trouvée, dis pourquoi le parallélisme est risqué. Pour la revue, propose `auto_review: [/simplify]` et `review: always` la première semaine : le développeur juge la qualité de la revue auto avant de passer à `per-ticket`.
 - **Les écarts de dossiers :** chemin actuel → convention, et le nombre de références à mettre à jour.
 - **Ce qui manque à `CLAUDE.md` :** le texte que tu proposes d'y ajouter, dans une section du type « Git, worktrees et intégration ».
 - **Les doublons :** ce qu'il faut en garder (dans `CLAUDE.md`) et ce que tu proposes de supprimer.
@@ -76,9 +76,9 @@ Puis fais trancher avec `AskUserQuestion`, en quatre questions au plus par appel
 Dans cet ordre, uniquement ce qui a été accepté.
 
 1. **Renommer un dossier :**
-   - `git mv <ancien> <nouveau>` si le dossier est suivi, `mv` sinon ;
+   - `git mv <old> <new>` si le dossier est suivi, `mv` sinon ;
    - remplace chaque chemin écrit en clair que l'enquête a trouvé. Ce sont des remplacements de texte exacts : ne modifie rien d'autre dans ces fichiers ;
-   - **vérifie** avec `git grep -n -I --untracked '<ancien>' -- ':!doc/tickets/done'`. Le résultat doit être vide. Sinon, corrige si c'est un chemin en clair oublié ; si c'est une référence construite, laisse-la et crée un ticket `pret`, qui la liste, pour qu'un ouvrier s'en occupe ;
+   - **vérifie** avec `git grep -n -I --untracked '<old>' -- ':!doc/tickets/done'`. Le résultat doit être vide. Sinon, corrige si c'est un chemin en clair oublié ; si c'est une référence construite, laisse-la et crée un ticket `ready`, qui la liste, pour qu'un ouvrier s'en occupe ;
    - ne réécris jamais l'historique git, ni les tickets de `done/` : ce sont des archives.
 2. **Garder un dossier :** ajoute dans `## Notes` de `doc/ork.md` une ligne comme « **Stories :** elles sont dans `doc/stories/`, pas dans `doc/story/` ».
 3. **Écrire `doc/ork.md`.** En révision, ne change que ce qui a été accepté et garde le reste tel quel.

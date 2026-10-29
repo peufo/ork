@@ -1,15 +1,15 @@
 ---
 id: T-0001
-titre: Skill /ork:init pour configurer un dépôt
-statut: fait
-priorite: normale
+title: Skill /ork:init pour configurer un dépôt
+status: done
+priority: normal
 story:
-plan_requis: false
+plan_required: false
 zones: [skills/, agents/lead.md, README.md]
-branche:
+branch:
 agent:
-cree: 2026-10-29
-maj: 2026-10-29
+created: 2026-10-29
+updated: 2026-10-29
 ---
 
 ## Contexte

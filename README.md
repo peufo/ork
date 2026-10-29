@@ -20,7 +20,7 @@ Rien de tout ça ne va dans le dépôt du client. Dans le dépôt, il n'y a que 
 
 ```
 doc/
-  ork.md                ← config du projet (commande de tests, branche, parallélisme)
+  ork.md                ← config du projet (commande de tests, branche, parallélisme, revue)
   story/                ← tes stories, comme aujourd'hui
   tickets/
     T-0012-….md         ← un fichier par ticket ouvert, statut en frontmatter
@@ -89,36 +89,37 @@ Pour le mode de permission, le mode **auto** (une fois validé dans ton environn
 - **Le matin** : `ork`, puis `/ork:resume`. Cinq lignes d'état, une question : par quoi on commence ?
 - **Tu remarques un truc** : `/ork:ticket le bouton reste actif pendant l'envoi`, avec une capture collée. Tu reçois une ligne en retour et tu retournes à ce que tu faisais.
 - **Idéation** : tu parles normalement d'une story. Le chef met à jour `doc/story/…`, propose un découpage en tickets et les crée après ton accord.
-- **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones` des tickets et `max_parallele`. Il lance le mode plan quand il le faut, et sinon l'exécution directe.
+- **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones` des tickets et `max_parallel`. Il lance le mode plan quand il le faut, et sinon l'exécution directe.
 - **Il te dérange seulement pour** une question bloquante, un plan à valider, un échec ou un fait nouveau. Le reste attend ton `/ork:status`.
-- **Relecture** : « montre-moi T-0012 » te donne le résumé, les endroits délicats et la commande de diff. Puis « intègre T-0012 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en MODE INTÉGRATION). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
+- **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]` dans `doc/ork.md`, chaque ouvrier passe ces revues sur son travail avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue auto est propre et où l'ouvrier ne signale rien. `review: required` dans un ticket force ta relecture.
+- **Relecture guidée** : « relisons T-0012 » te donne le résumé en trois lignes, puis chaque point délicat, un par message, avec un lien cliquable vers la ligne dans le worktree. Tu réponds « ok » ou une remarque, que le chef transmet à l'ouvrier. Puis « intègre T-0012 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en INTEGRATION MODE). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
 - **Worktree hors ticket** : « intègre <worktree> » fonctionne aussi pour une session lancée à part. `/ork:status` signale ces worktrees orphelins.
 - **Conventions du projet** : ork reste générique. Ce qui est propre au projet va dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés à régénérer plutôt que fusionner, vérifications supplémentaires selon les zones, style de commit.
 
 ## Le cycle d'un ticket
 
 ```
-idee → pret → (plan → plan-a-valider →) en-cours → a-relire → fait
-                                     ↘ bloque ↗
+idea → ready → (planning → plan-review →) in-progress → in-review → done
+                                     ↘ blocked ↗
 ```
 
-Un ouvrier qui rencontre une décision qui ne lui appartient pas **s'arrête** et rend `STATUT: BLOQUÉ` avec 2 ou 3 options et une recommandation. Un sous-agent ne peut pas te poser de question directement, c'est pour ça que ce protocole existe. Le chef te pose la question, puis relance le **même** ouvrier avec ta réponse. Celui-ci reprend avec tout son historique.
+Un ouvrier qui rencontre une décision qui ne lui appartient pas **s'arrête** et rend `STATUS: BLOCKED` avec 2 ou 3 options et une recommandation. Un sous-agent ne peut pas te poser de question directement, c'est pour ça que ce protocole existe. Le chef te pose la question, puis relance le **même** ouvrier avec ta réponse. Celui-ci reprend avec tout son historique.
 
 ## Vue visuelle dans Obsidian
 
-Chaque ticket a son statut en frontmatter, donc tu peux ouvrir `doc/` comme coffre Obsidian et afficher les tickets regroupés par `statut`, par exemple avec une vue *Bases* ou un plugin de tableau qui lit les propriétés. Je n'ai pas testé de configuration précise : à ajuster selon ce que tu utilises.
+Chaque ticket a son statut en frontmatter, donc tu peux ouvrir `doc/` comme coffre Obsidian et afficher les tickets regroupés par `status`, par exemple avec une vue *Bases* ou un plugin de tableau qui lit les propriétés. Je n'ai pas testé de configuration précise : à ajuster selon ce que tu utilises.
 
 ## Ce qu'il faut savoir (vérifié dans la doc Claude Code)
 
 - **Le prompt du chef remplace entièrement celui de Claude Code**, comme `--system-prompt`. Ton `CLAUDE.md` est toujours chargé. C'est voulu : le chef n'a pas besoin des instructions de codage.
 - **Les sous-agents sont en arrière-plan par défaut** : le chef reste disponible pendant qu'ils travaillent, et leurs rapports arrivent en notification.
-- **Le worktree d'un ouvrier part de la branche par défaut du dépôt**, pas de la branche courante. L'ouvrier commence donc par s'aligner sur la `branche_integration` de `doc/ork.md`. Seul ce qui y est **commité** lui parvient : commite avant de lancer un ticket qui dépend d'un changement récent.
+- **Le worktree d'un ouvrier part de la branche par défaut du dépôt**, pas de la branche courante. L'ouvrier commence donc par s'aligner sur la `integration_branch` de `doc/ork.md`. Seul ce qui y est **commité** lui parvient : commite avant de lancer un ticket qui dépend d'un changement récent.
 - **Les tickets ne sont écrits que par le chef**, dans le dépôt principal. Les ouvriers reçoivent le ticket recopié dans leur message, parce que leur worktree ne contient pas les fichiers non commités.
 - **Les agents d'un plugin ignorent** les champs `permissionMode`, `hooks` et `mcpServers`. Si tu en as besoin plus tard, copie l'agent concerné dans `~/.claude/agents/`.
 - **`initialPrompt` ne s'applique pas aux agents de plugin**, d'où le `/ork:resume` à taper au démarrage.
 - **Le chef n'a pas de restriction d'outils**. La règle « je ne lis jamais de code » est une consigne, pas un verrou. Si tu veux la verrouiller, ajoute dans `lead.md` un champ `tools:` qui exclut `Edit` et `Write`. Il ne pourrait alors plus écrire les tickets lui-même : à tester si ça devient un problème.
-- **Coût** : plusieurs ouvriers en parallèle consomment ta limite plus vite. `max_parallele: 2` est un bon départ.
+- **Coût** : plusieurs ouvriers en parallèle consomment ta limite plus vite. `max_parallel: 2` est un bon départ.
 
 ## Démarrer petit
 
-La première semaine, mets `max_parallele: 1` dans `doc/ork.md`. Le but est de roder trois choses : le format des rapports, le protocole de blocage et le seuil « plan requis ». Tu ajusteras ensuite les prompts de `agents/` selon ce qui t'agace. Ce sont des fichiers Markdown, et `/reload-plugins` recharge les changements sans redémarrer.
+La première semaine, mets `max_parallel: 1` dans `doc/ork.md`. Le but est de roder trois choses : le format des rapports, le protocole de blocage et le seuil « plan requis ». Tu ajusteras ensuite les prompts de `agents/` selon ce qui t'agace. Ce sont des fichiers Markdown, et `/reload-plugins` recharge les changements sans redémarrer.

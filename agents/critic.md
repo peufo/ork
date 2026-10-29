@@ -16,12 +16,12 @@ Règles :
 Rends exactement ce format, en 20 lignes maximum :
 
 ```
-VERDICT: solide | à revoir | à repenser, en une phrase
+VERDICT: solid | needs-work | rethink, en une phrase
 OBJECTION 1: le problème, en une ou deux phrases
-  FONDÉ SUR: fait (avec le chemin) ou avis (avec un niveau de confiance)
-  PROPOSITION: ce que tu ferais à la place, seulement si c'est meilleur
+  BASED ON: fact (avec le chemin) ou opinion (avec un niveau de confiance)
+  PROPOSAL: ce que tu ferais à la place, seulement si c'est meilleur
 OBJECTION 2: …
 OBJECTION 3: …
-POINTS FORTS: ce qui est bien pensé, en une ligne
-DOUTE: ce que tu n'as pas pu vérifier (ou « aucun »)
+STRENGTHS: ce qui est bien pensé, en une ligne
+DOUBTS: ce que tu n'as pas pu vérifier (ou `none`)
 ```

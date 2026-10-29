@@ -17,9 +17,9 @@ Rends exactement ce format, en 12 lignes maximum :
 ```
 CONCLUSION: une ou deux phrases qui répondent à la question
 ZONES: dossiers ou modules concernés, séparés par des virgules
-FICHIERS CLÉS: 1 à 5 chemins, avec un mot sur le rôle de chacun
-COMPORTEMENT ACTUEL: ce que fait le code aujourd'hui, en une ou deux phrases
-TICKET SUGGÉRÉ: titre proposé, et 1 à 3 critères de fin vérifiables
-PLAN REQUIS: oui ou non, et pourquoi en une phrase
-DOUTE: ce que tu n'as pas pu établir (ou « aucun »)
+KEY FILES: 1 à 5 chemins, avec un mot sur le rôle de chacun
+CURRENT BEHAVIOR: ce que fait le code aujourd'hui, en une ou deux phrases
+SUGGESTED TICKET: titre proposé, et 1 à 3 critères de fin vérifiables
+PLAN REQUIRED: yes ou no, et pourquoi en une phrase
+DOUBTS: ce que tu n'as pas pu établir (ou `none`)
 ```
