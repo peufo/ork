@@ -1,7 +1,7 @@
 ---
 name: init
-description: Configurer ork dans un dépôt, ou revoir sa configuration. Détecte les commandes et la branche d'intégration, aligne les dossiers sur les conventions d'ork, vérifie que CLAUDE.md donne aux ouvriers ce dont ils ont besoin, puis écrit `doc/ork.md` après accord.
-disable-model-invocation: true
+description: Onboarding d'ork dans un dépôt, ou révision de sa configuration. Détecte les commandes et la branche d'intégration, aligne les dossiers sur les conventions d'ork, vérifie que CLAUDE.md donne aux ouvriers ce dont ils ont besoin, puis écrit `doc/ork.md` après accord. À charger uniquement dans une session d'orchestration ork (`ork:lead`), dans deux cas : `doc/ork.md` n'existe pas et le développeur accepte l'onboarding, ou il demande de revoir la configuration d'ork. Jamais dans une session de développement ordinaire.
+user-invocable: false
 ---
 
 Le développeur installe ork dans ce dépôt, ou veut revoir sa configuration. C'est un moment de mise en place : tu peux poser plusieurs questions, mais tu n'écris **rien** avant son accord.

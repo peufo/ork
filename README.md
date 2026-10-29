@@ -9,7 +9,7 @@ Un plugin Claude Code pour travailler avec **une seule session principale** qui 
 | `agents/lead.md` | Le chef d'orchestre (`ork:lead`). Lancé comme session principale, son prompt remplace celui de Claude Code et reste actif toute la session. |
 | `agents/worker.md` | L'ouvrier (`ork:worker`) : exécute un ticket dans un worktree isolé, en mode plan ou exécution, et rend un rapport court au format fixe. |
 | `agents/scout.md` | L'enquêteur (`ork:scout`) : enquête en lecture seule (sur Sonnet) pour trier une remarque ou trouver les zones touchées. |
-| `skills/init` | `/ork:init` : installer ork dans un dépôt ou revoir sa configuration. Il détecte les commandes, aligne les dossiers sur les conventions (ou ajoute une note) et complète `CLAUDE.md` pour les ouvriers. |
+| `skills/init` | Onboarding implicite, sans commande : le chef le propose de lui-même quand `doc/ork.md` manque, et le recharge quand tu lui demandes de revoir la config. Il détecte les commandes, aligne les dossiers sur les conventions (ou ajoute une note) et complète `CLAUDE.md` pour les ouvriers. |
 | `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. |
 | `skills/status` | `/ork:status` : état de tous les tickets et livraison des notifications différées. |
 | `skills/resume` | `/ork:resume` : redémarrer une session fraîche à partir des fichiers. |
@@ -50,7 +50,7 @@ Dans le dépôt du projet :
 claude --agent ork:lead
 ```
 
-Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:resume`.
+Le premier jour, parle-lui normalement : il voit que le dépôt n'est pas initialisé et te propose l'onboarding, qui crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:resume`.
 
 Un alias rend ça confortable :
 
