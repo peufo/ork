@@ -1,7 +1,7 @@
 ---
 id: T-0001
 titre: Skill /ork:init pour configurer un dépôt
-statut: idee
+statut: pret
 priorite: normale
 story:
 plan_requis: false
@@ -22,7 +22,15 @@ allégerait le prompt de `lead`.
 
 Ce qu'il devrait faire :
 - détecter les commandes check, lint, tests et contrat, ainsi que la branche d'intégration ;
-- repérer les dossiers de stories et de specs existants (Poj a `doc/stories/`, et non `doc/story/`) ;
+- repérer les dossiers existants qui ne suivent pas les conventions d'ork. Exemple : Poj a
+  `doc/stories/`, alors qu'ork attend `doc/story/`. Pour chaque écart, demander à
+  l'utilisateur ce qu'il préfère :
+  - **renommer le dossier** (option recommandée, présentée en premier). Avant le renommage,
+    lister tout ce qui le référence (docs, CLAUDE.md, code, scripts, configs) ; après le
+    renommage, mettre ces références à jour ; enfin, relancer une recherche pour vérifier
+    qu'il ne reste aucune référence à l'ancien chemin ;
+  - **garder le dossier et ajouter une note** dans `doc/ork.md` (section Notes), qui indique
+    l'emplacement réel ;
 - repérer les worktrees et les skills d'intégration existants qui feraient doublon avec ork.
   Poj avait un skill `integrate`, absorbé depuis par le MODE INTÉGRATION. L'init devrait
   aussi vérifier que `CLAUDE.md` décrit les conventions dont les ouvriers ont besoin :
@@ -32,8 +40,9 @@ Ce qu'il devrait faire :
 
 ## Critères de fin
 - [ ] `skills/init/SKILL.md` existe et couvre la détection et la proposition ci-dessus
-- [ ] `doc/ork.md` accepte une clé `dossier_stories`
-- [ ] `agents/lead.md` lit ces clés au lieu de valeurs figées, et renvoie vers `/ork:init` si la config manque
+- [ ] Pour un dossier hors convention, l'init pose la question « renommer ou noter », avec le renommage recommandé
+- [ ] Après un renommage, une recherche finale ne trouve plus aucune référence à l'ancien chemin (fichiers générés et `done/` exclus)
+- [ ] `agents/lead.md` renvoie vers `/ork:init` quand la config manque, au lieu de la proposer lui-même
 - [ ] README mis à jour
 
 ## Plan
@@ -42,3 +51,4 @@ Ce qu'il devrait faire :
 
 ## Journal
 - 2026-10-29 — créé depuis les retours sur Poj
+- 2026-10-29 — dossiers hors convention : demander s'il faut renommer (recommandé, avec mise à jour des références) ou noter. La clé `dossier_stories` est abandonnée. Statut `pret`.
