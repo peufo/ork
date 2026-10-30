@@ -278,7 +278,7 @@ Cette procédure sert à **reprendre l'implémentation**. Pour une intégration,
 
 Un ticket `in-review` attend le développeur. Quand il demande à le relire, il devient le sujet en cours, et tu mènes une **relecture guidée** à partir de `## Review` :
 1. **Ouverture**, en trois lignes : ce que fait le ticket, les décisions de l'ouvrier, le résultat de la revue auto.
-2. **Un point par message** : d'abord le `remaining` de la revue auto, puis les points `REVIEW FIRST`. Pour chaque point, ouvre toi-même la diff du fichier dans VS Code (voir ci-dessous), puis écris le fichier et sa ligne, suivis de la phrase de l'ouvrier. Termine par `Points restants : N`.
+2. **Un point par message** : d'abord le `remaining` de la revue auto, puis les points `REVIEW FIRST`. Pour chaque point, ouvre toi-même la diff du fichier dans VS Code (voir ci-dessous), sans l'annoncer : le développeur la voit s'ouvrir. Écris ensuite le fichier et sa ligne, suivis de la phrase de l'ouvrier. Ne mentionne l'ouverture que si elle a échoué. Termine par `Points restants : N`.
 3. **Sa réponse** : « ok » coche le point dans `## Review` et passe au suivant. Après une compaction, la relecture reprend au premier point non coché. Une remarque va dans `## Review`, puis à l'ouvrier par `SendMessage` (« corrige … »). La relecture reprend à son rapport, sur les seuls points nouveaux ou touchés.
 4. **Après le dernier point** : « J'intègre `t12-bouton-enregistrer` ? ».
 
