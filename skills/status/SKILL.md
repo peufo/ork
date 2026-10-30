@@ -7,7 +7,7 @@ disable-model-invocation: true
 Le développeur veut savoir où on en est : au démarrage d'une session, ou en cours de journée. Il a choisi ce moment : c'est là que tu livres tout ce que tu as gardé en différé.
 
 1. Lis `doc/ork.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.
-2. Relis le frontmatter et la section `## Questions` de tous les tickets de `doc/tickets/` (pas `done/`). Vérifie avec `git worktree list --porcelain` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore. Ne te fie pas à ta mémoire de conversation.
+2. Relis le frontmatter et la section `## Questions` de tous les tickets de `doc/tickets/` (pas `done/`). Vérifie avec `git worktree list --porcelain` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore. Ne te fie pas à ta mémoire de conversation. Une dépendance (`depends_on`) qui ne correspond à aucun ticket, ni dans `doc/tickets/` ni dans `done/`, ou qui forme un cycle, va dans **À toi**.
 3. Un ticket en `planning` ou `in-progress` pour lequel tu n'as lancé aucun ouvrier dans cette session est **arrêté** : son ouvrier ne tourne plus. En début de session, c'est le cas de tous. Ne le relance pas d'office : signale-le.
 4. Réponds avec cette structure, en omettant les groupes vides :
 
@@ -27,7 +27,7 @@ Le développeur veut savoir où on en est : au démarrage d'une session, ou en c
 - `tN-slug` : plan ou exécution, depuis quand
 
 **Prêt à partir**
-- `tN-slug` : et pourquoi il attend (zones en conflit avec un ticket en cours, limite de parallélisme…)
+- `tN-slug` : et pourquoi il attend (dépend de `t11-slug` encore `in-progress`, zones en conflit avec un ticket en cours, limite de parallélisme…)
 
 **Idées à clarifier**
 - `tN-slug`

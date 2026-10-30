@@ -44,6 +44,7 @@ Chaque décision a un niveau :
 | Plan ou exécution directe | seul, selon `## Plan required when` | section 3 |
 | Modèle et effort d'un ouvrier | seul | section 3 |
 | Poser `review: required` sur un ticket | seul, selon `## Review required when` | Format d'un ticket |
+| Poser une dépendance entre tickets | signalé | Format d'un ticket |
 | Trancher une question `BLOCKED` d'un ouvrier | demande | section 4 |
 | Relancer après un `FAILED` | demande | section 4 |
 | Intégrer après un `DONE` | signalé si les conditions de la section 4 sont réunies, sinon demande | section 4 |
@@ -82,6 +83,7 @@ title: Le bouton Enregistrer reste actif pendant l'envoi
 status: ready
 priority: normal
 story: doc/story/edition-facture.md
+depends_on: [t11]
 plan_required: false
 review:
 model: sonnet
@@ -126,6 +128,8 @@ Valeurs de `status` :
 - `done` : intégré, fichier déplacé dans `done/`.
 
 `priority` : `high`, `normal` ou `low`. `review` : vide, ou `required` pour forcer la relecture du développeur sur ce ticket. Il peut le poser lui-même. Toi, pose-le à la création si une règle de `## Review required when` s'applique au ticket. `zones` : les dossiers ou modules que le ticket touchera probablement. Demande-les à `ork:scout` si tu ne les connais pas. Ce champ sert à décider du parallélisme.
+
+`depends_on` : les `id` des tickets qui doivent être `done` avant que celui-ci parte. Vide ou absent : aucune dépendance. N'en pose une que si le ticket a besoin du code de l'autre, pas pour un simple ordre de préférence. Avant de l'écrire, vérifie que chaque `id` existe (dans `doc/tickets/` ou `done/`) et qu'elle ne crée pas de cycle. Si un ticket est abandonné alors que d'autres en dépendent, demande au développeur quoi faire de ceux-ci : retirer la dépendance, ou les abandonner aussi.
 
 Pour numéroter, prends le plus grand numéro parmi les `id` de `doc/tickets/` et `doc/tickets/done/` (compare les nombres, pas les noms de fichier : `t10` vient après `t9`), plus un.
 
@@ -175,7 +179,7 @@ Le développeur l'envoie telle quelle, ou avec `/ork:ticket`.
 1. Si une capture d'écran est jointe et qu'elle n'existe pas encore sur disque, enregistre-la dans `doc/tickets/captures/` sous un nom daté, pour que les ouvriers puissent la lire.
 2. Vérifie qu'aucun ticket ouvert dans `doc/tickets/` ne couvre déjà ce sujet. Si c'est le cas, ajoute la remarque à son contexte et à son journal au lieu de créer un doublon.
 3. Si la remarque est claire et que tu sais quelles zones elle touche, rédige directement le ticket. Sinon, lance `ork:scout` avec la remarque et le chemin de la capture. Ne garde que sa conclusion.
-4. Crée le ticket, en `ready` si les critères de fin sont clairs, sinon en `idea`, et réponds en **une ou deux lignes** : numéro, titre, statut, et la seule question éventuelle.
+4. Crée le ticket, en `ready` si les critères de fin sont clairs, sinon en `idea`, et réponds en **une ou deux lignes** : numéro, titre, statut, et la seule question éventuelle. Si la remarque suppose qu'un ticket encore ouvert soit fait d'abord, pose `depends_on` et dis-le dans la même ligne (« attend `t11-slug` »).
 5. Ne lance pas le ticket, sauf s'il est `ready` et que les règles de parallélisme le permettent. Dans ce cas, lance-le et dis-le dans la même ligne.
 6. Si le développeur estime que ça ne mérite pas de ticket, n'insiste pas.
 
@@ -190,6 +194,7 @@ C'est le seul moment où tu peux être long et poser plusieurs questions. Dès q
 Quand des tickets sont `ready`, lance-les **sans redemander l'autorisation**, sauf si une règle de `## Ask before` couvre le ticket ou si le développeur a dit le contraire.
 
 **Parallèle ou séquence**, c'est ta décision :
+- ne lance jamais un ticket dont une dépendance (`depends_on`) n'est pas `done`, ni en PLAN MODE ni en EXECUTION MODE : l'ouvrier part de `integration_branch` et ne verrait pas le code dont il dépend. Le ticket reste `ready` et part dès que sa dépendance est intégrée ;
 - ne lance jamais en parallèle deux tickets dont les `zones` se recoupent. Le second attend que le premier soit intégré ;
 - respecte `max_parallel` (2 par défaut) ;
 - en cas de doute, séquence. Un conflit de fusion coûte plus cher qu'une attente.
@@ -320,7 +325,7 @@ Toutes les commandes passent par `git -C <path>`.
 
    Le ticket reste `in-review`. Traite le rapport comme décrit à la section 4 (`BLOCKED` et `FAILED` sont urgents), puis reviens ici.
 5. **Poser.** Revérifie que le dépôt principal est propre : le développeur a pu y toucher entre-temps. S'il ne l'est plus, arrête-toi comme à l'étape 1. Puis `git merge --ff-only <branch>`. Si l'avance rapide est refusée, c'est que `integration_branch` a avancé : retour à l'étape 4.
-6. **Clore le ticket**, s'il y en a un : statut `done`, ligne de journal (commits, conflits), fichier déplacé dans `doc/tickets/done/`.
+6. **Clore le ticket**, s'il y en a un : statut `done`, ligne de journal (commits, conflits), fichier déplacé dans `doc/tickets/done/`. Puis lance, selon la section 3, les tickets `ready` dont `depends_on` le cite et qui n'attendent plus rien.
 7. **Supprimer**, après avoir vérifié `git merge-base --is-ancestor <branch> <integration_branch>` :
    - `git worktree remove <path>`, puis `git branch -d <branch>` ;
    - worktree verrouillé dont le pid est mort, ou dont le pid est le tien (voir l'étape 2) : `git worktree unlock`, puis `remove` ;
