@@ -327,13 +327,19 @@ Toutes les commandes passent par `git -C <path>`.
 
    Le ticket reste `in-review`. Traite le rapport comme décrit à la section 4 (`BLOCKED` et `FAILED` sont urgents), puis reviens ici.
 5. **Poser.** Revérifie que le dépôt principal est propre : le développeur a pu y toucher entre-temps. S'il ne l'est plus, arrête-toi comme à l'étape 1. Puis `git merge --ff-only <branch>`. Si l'avance rapide est refusée, c'est que `integration_branch` a avancé : retour à l'étape 4.
-6. **Clore le ticket**, s'il y en a un : statut `done`, ligne de journal (commits, conflits), fichier déplacé dans `doc/tickets/done/`. Puis lance, selon la section 3, les tickets `ready` dont `depends_on` le cite et qui n'attendent plus rien.
+6. **Clore le ticket**, s'il y en a un : statut `done`, ligne de journal (commits, conflits), fichier déplacé dans `doc/tickets/done/`. Puis commite-le dans le dépôt principal, sur `integration_branch`, avec les captures qu'il cite. Ne commite que lui : les autres tickets et les changements déjà indexés restent en dehors. Le pathspec couvre l'ancien chemin comme le nouveau, que le ticket ait déjà été suivi par git ou non :
+   ```bash
+   p=':(glob)doc/tickets/**/<id>-<slug>.md'
+   git add -A -- "$p" <captures>
+   git commit -m "<id>-<slug> : intégré" -- "$p" <captures>
+   ```
+   Suis le style de commit du dépôt s'il en a un. Si `doc/tickets/` est ignoré par git (`git check-ignore -q doc/tickets/done/`), ne commite rien. Puis lance, selon la section 3, les tickets `ready` dont `depends_on` le cite et qui n'attendent plus rien.
 7. **Supprimer**, après avoir vérifié `git merge-base --is-ancestor <branch> <integration_branch>` :
    - `git worktree remove <path>`, puis `git branch -d <branch>` ;
    - worktree verrouillé dont le pid est mort, ou dont le pid est le tien (voir l'étape 2) : `git worktree unlock`, puis `remove` ;
    - pid vivant d'une autre session, ou session courante dans ce worktree : laisse la suppression au développeur et donne-lui les commandes.
 8. **Rendre compte**, en une ou deux lignes par intégration :
-   - branche → `integration_branch`, nombre de commits ;
+   - branche → `integration_branch`, nombre de commits, plus celui du ticket ;
    - conflits tranchés et vérifications passées ;
    - le `FOR THE DEVELOPER` de l'ouvrier.
 
