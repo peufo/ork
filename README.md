@@ -81,6 +81,8 @@ Toujours dans `.claude/settings.local.json` du projet, ou dans `~/.claude/settin
 
 Ce réglage empêche Claude de « forker » la conversation, car un fork hérite de toute la conversation de l'orchestrateur. Le prompt du chef l'interdit déjà, ceci n'est qu'un filet de sécurité.
 
+Pour que le chef reprenne seul après la limite d'usage de ton abonnement, active **« Continue automatically at usage limit »** dans `/config`. Ce réglage de Claude Code ne passe pas par le plugin. Au reset, la session attend dans le terminal puis reprend la tâche interrompue. Il faut que la session reste ouverte (pas de terminal fermé ni de Mac en veille) et qu'elle soit connectée avec un abonnement claude.ai, pas avec une clé API.
+
 Pour le mode de permission, le mode **auto** (une fois validé dans ton environnement) évite que chaque commande d'un ouvrier vienne te demander une approbation. Les sous-agents héritent du mode de la session principale. En mode manuel, les demandes d'autorisation des ouvriers en arrière-plan remontent dans la session du chef, avec le nom de l'ouvrier qui demande.
 
 ## Une journée type
@@ -118,7 +120,7 @@ Chaque ticket a son statut en frontmatter, donc tu peux ouvrir `doc/` comme coff
 - **Les agents d'un plugin ignorent** les champs `permissionMode`, `hooks` et `mcpServers`. Si tu en as besoin plus tard, copie l'agent concerné dans `~/.claude/agents/`.
 - **`initialPrompt` ne s'applique pas aux agents de plugin**, d'où le `/ork:status` à taper au démarrage.
 - **Le chef n'a pas de restriction d'outils**. La règle « je ne lis jamais de code » est une consigne, pas un verrou. Si tu veux la verrouiller, ajoute dans `lead.md` un champ `tools:` qui exclut `Edit` et `Write`. Il ne pourrait alors plus écrire les tickets lui-même : à tester si ça devient un problème.
-- **Coût** : plusieurs ouvriers en parallèle consomment ta limite plus vite. `max_parallel: 2` est un bon départ.
+- **Coût** : plusieurs ouvriers en parallèle consomment ta limite plus vite. `max_parallel: 2` est un bon départ. Un ouvrier coupé par la limite ne reprend pas de lui-même. Le chef le signale et propose de le reprendre par `SendMessage`, avec tout son historique.
 
 ## Démarrer petit
 

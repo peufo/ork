@@ -49,6 +49,7 @@ Chaque décision a un niveau :
 | Relancer après un `FAILED` | demande | section 4 |
 | Intégrer après un `DONE` | signalé si les conditions de la section 4 sont réunies, sinon demande | section 4 |
 | Relancer un ouvrier arrêté | demande | `/ork:status` |
+| Reprendre un ouvrier coupé par la limite d'usage | demande | section 4 |
 | Supprimer un worktree et sa branche après intégration | seul | section 6 |
 
 **Ajuster un niveau.** Les sections `## Ask before` et `## No need to ask` de `doc/ork.md` déplacent une décision : vers « demande » pour la première, vers « seul » ou « signalé » pour la seconde. Relis-les avant chaque décision de la table. Si deux règles se contredisent, `## Ask before` l'emporte. Une consigne donnée en conversation pour un ticket ne vaut que pour ce ticket.
@@ -230,7 +231,8 @@ Les rapports arrivent en notification, au format court fixé (voir l'agent `ork:
 - `STATUS: PLAN READY` : plan dans le ticket, statut `plan-review`, notification **urgente** ;
 - `STATUS: BLOCKED` : question dans `## Questions`, statut `blocked`, notification **urgente** ;
 - `STATUS: DONE` : résumé dans le journal, `branch:` remplie, `AUTO REVIEW` et `REVIEW FIRST` recopiés dans `## Review`, statut `in-review`. Puis décide de la relecture (ci-dessous) ;
-- `STATUS: FAILED` : cause dans le journal, notification **urgente** avec ta proposition (relancer un cran au-dessus, découper, abandonner). Si une règle de `## No need to ask` couvre ta proposition, applique-la et signale-la en différé.
+- `STATUS: FAILED` : cause dans le journal, notification **urgente** avec ta proposition (relancer un cran au-dessus, découper, abandonner). Si une règle de `## No need to ask` couvre ta proposition, applique-la et signale-la en différé ;
+- **fin sans rapport sur une erreur d'API** (limite d'usage, surcharge) : la notification d'échec nomme l'erreur et ne contient pas de ligne `STATUS:`. Ce n'est pas un `FAILED` : l'ouvrier a été coupé, il n'a pas échoué. Note-le dans le journal, et laisse le ticket dans son statut (`planning` ou `in-progress`). Notification **différée**, avec ta proposition : reprendre **le même ouvrier** par `SendMessage` (« reprends là où tu t'es arrêté »). Il garde son historique, son modèle et son effort : pas de cran au-dessus. Ne lance rien de nouveau avant le reset de la limite.
 
 Puis vérifie si un ticket `ready` en attente peut maintenant partir.
 
@@ -255,10 +257,10 @@ C'est ce qui protège le focus du développeur. Ne le transforme pas en esclave 
 - un échec ou un conflit que tu ne peux pas résoudre seul ;
 - un fait nouveau qui remet en cause une story ou une décision.
 
-**Différé : tu le gardes** jusqu'à ce que le développeur demande où on en est (« point », `/ork:status`) ou jusqu'à ta prochaine réponse à un autre sujet, où tu l'ajoutes en une ligne à la fin :
-- ticket terminé et prêt à relire ;
 Pour chacun, envoie aussi une notification avec l'outil `PushNotification` : une ligne, sans markdown, qui nomme le ticket et ce qu'il attend (« t14 bloqué : garder l'ancien export CSV ? »). Le développeur est peut-être parti. L'outil ne l'envoie pas s'il est devant le terminal.
 
+**Différé : tu le gardes** jusqu'à ce que le développeur demande où on en est (« point », `/ork:status`) ou jusqu'à ta prochaine réponse à un autre sujet, où tu l'ajoutes en une ligne à la fin :
+- ticket terminé et prêt à relire ;
 - petite découverte sans conséquence immédiate ;
 - intégration réussie.
 
