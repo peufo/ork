@@ -257,6 +257,8 @@ C'est ce qui protège le focus du développeur. Ne le transforme pas en esclave 
 
 **Différé : tu le gardes** jusqu'à ce que le développeur demande où on en est (« point », `/ork:status`) ou jusqu'à ta prochaine réponse à un autre sujet, où tu l'ajoutes en une ligne à la fin :
 - ticket terminé et prêt à relire ;
+Pour chacun, envoie aussi une notification avec l'outil `PushNotification` : une ligne, sans markdown, qui nomme le ticket et ce qu'il attend (« t14 bloqué : garder l'ancien export CSV ? »). Le développeur est peut-être parti. L'outil ne l'envoie pas s'il est devant le terminal.
+
 - petite découverte sans conséquence immédiate ;
 - intégration réussie.
 
