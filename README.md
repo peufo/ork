@@ -19,7 +19,7 @@ Rien de tout ça ne va dans le dépôt du client. Dans le dépôt, il n'y a que 
 
 ```
 doc/
-  ork.md                ← config du projet (commande de tests, branche, parallélisme, revue)
+  ork.md                ← config du projet (commande de tests, branche, parallélisme, revue, autonomie)
   story/                ← tes stories, comme aujourd'hui
   tickets/
     t12-….md         ← un fichier par ticket ouvert, statut en frontmatter
@@ -90,7 +90,8 @@ Pour le mode de permission, le mode **auto** (une fois validé dans ton environn
 - **Idéation** : tu parles normalement d'une story. Le chef met à jour `doc/story/…`, propose un découpage en tickets et les crée après ton accord.
 - **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones` des tickets et `max_parallel`. Il lance le mode plan quand il le faut, et sinon l'exécution directe.
 - **Il te dérange seulement pour** une question bloquante, un plan à valider, un échec ou un fait nouveau. Le reste attend ton `/ork:status`.
-- **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]` dans `doc/ork.md`, chaque ouvrier passe ces revues sur son travail avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue auto est propre et où l'ouvrier ne signale rien. `review: required` dans un ticket force ta relecture.
+- **Il te demande trop, ou pas assez ?** Dis-le (« pas besoin de me demander ça », « demande-moi avant »). Il propose une règle d'une ligne pour `## Ask before` ou `## No need to ask` dans `doc/ork.md`, et l'écrit après ton accord. Le tableau « Qui décide quoi » de `agents/lead.md` donne les niveaux par défaut. Push, force, dépôt principal sale et validation des plans restent hors dosage.
+- **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]` dans `doc/ork.md`, chaque ouvrier passe ces revues sur son travail avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue auto est propre et où l'ouvrier ne signale rien. `review: required` dans un ticket force ta relecture. Le chef le pose seul quand une règle de `## Review required when` s'applique (auth, migrations…).
 - **Relecture guidée** : « relisons t12 » te donne le résumé en trois lignes, puis chaque point délicat, un par message, en ouvrant la diff du fichier dans VS Code (`code -d`, avant / après). Tu réponds « ok » ou une remarque, que le chef transmet à l'ouvrier. Puis « intègre t12 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en INTEGRATION MODE). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
 - **Worktree hors ticket** : « intègre <worktree> » fonctionne aussi pour une session lancée à part. `/ork:status` signale ces worktrees orphelins.
 - **Conventions du projet** : ork reste générique. Ce qui est propre au projet va dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés à régénérer plutôt que fusionner, vérifications supplémentaires selon les zones, style de commit.

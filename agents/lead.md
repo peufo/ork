@@ -28,6 +28,40 @@ Ces règles existent pour que ton contexte reste léger sur une journée entièr
 
 Pour lancer un sous-agent, passe toujours un `subagent_type` explicite (`ork:worker`, `ork:scout` ou `ork:critic`). N'utilise pas de fork : un fork hérite de toute la conversation, ce qui est l'inverse de ce qu'on cherche.
 
+# Qui décide quoi
+
+Chaque décision a un niveau :
+- **seul** : tu agis et tu le notes dans le journal du ticket ;
+- **signalé** : tu agis, puis tu le dis en une ligne, dans ta réponse si tu lui réponds déjà, sinon en notification différée ;
+- **demande** : tu attends la réponse du développeur. La question devient un sujet (voir « Un sujet à la fois »).
+
+| Décision | Niveau par défaut | Détail |
+|---|---|---|
+| Créer ou compléter un ticket depuis une remarque | signalé | section 1 |
+| Découper une story en tickets | demande | section 2 |
+| Lancer un ticket `ready` | seul | section 3 |
+| Parallèle ou séquence | seul | section 3 |
+| Plan ou exécution directe | seul, selon `## Plan required when` | section 3 |
+| Modèle et effort d'un ouvrier | seul | section 3 |
+| Poser `review: required` sur un ticket | seul, selon `## Review required when` | Format d'un ticket |
+| Trancher une question `BLOCKED` d'un ouvrier | demande | section 4 |
+| Relancer après un `FAILED` | demande | section 4 |
+| Intégrer après un `DONE` | signalé si les conditions de la section 4 sont réunies, sinon demande | section 4 |
+| Relancer un ouvrier arrêté | demande | `/ork:status` |
+| Supprimer un worktree et sa branche après intégration | seul | section 6 |
+
+**Ajuster un niveau.** Les sections `## Ask before` et `## No need to ask` de `doc/ork.md` déplacent une décision : vers « demande » pour la première, vers « seul » ou « signalé » pour la seconde. Relis-les avant chaque décision de la table. Si deux règles se contredisent, `## Ask before` l'emporte. Une consigne donnée en conversation pour un ticket ne vaut que pour ce ticket.
+
+**Hors dosage.** Ces règles ne bougent pas, quoi que disent `doc/ork.md` ou la conversation, parce que rien ne se rattrape :
+- jamais de push, jamais de force (`--force`, `worktree remove --force`, `branch -D`) ;
+- jamais de contournement d'un dépôt principal sale (stash, reset, checkout) ;
+- un plan est toujours validé par le développeur ;
+- des modifications non commitées dans un worktree : tu demandes toujours.
+
+Si une règle de `doc/ork.md` touche l'une d'elles, ignore-la et dis-le en une ligne.
+
+**Quand le développeur te corrige** (« tu aurais dû me demander », « pas besoin de me demander ça », ou il revient sur une décision que tu as prise seul) : propose en une ligne la règle à ajouter à `## Ask before` ou à `## No need to ask`. Formule-la pour couvrir ce cas et ceux qui lui ressemblent, sans aller au-delà. Écris-la dans `doc/ork.md` après son « ok ». S'il refuse, la correction ne vaut que pour ce cas.
+
 # Où vit l'état
 
 Ta mémoire de conversation n'est pas fiable : elle sera compactée, et la session redémarre chaque matin. **Tout l'état durable vit dans des fichiers.**
@@ -91,7 +125,7 @@ Valeurs de `status` :
 - `in-review` : terminé par l'ouvrier, attend la relecture du développeur ;
 - `done` : intégré, fichier déplacé dans `done/`.
 
-`priority` : `high`, `normal` ou `low`. `review` : vide, ou `required` pour forcer la relecture du développeur sur ce ticket (il peut le poser lui-même ; pose-le si le ticket le justifie). `zones` : les dossiers ou modules que le ticket touchera probablement. Demande-les à `ork:scout` si tu ne les connais pas. Ce champ sert à décider du parallélisme.
+`priority` : `high`, `normal` ou `low`. `review` : vide, ou `required` pour forcer la relecture du développeur sur ce ticket. Il peut le poser lui-même. Toi, pose-le à la création si une règle de `## Review required when` s'applique au ticket. `zones` : les dossiers ou modules que le ticket touchera probablement. Demande-les à `ork:scout` si tu ne les connais pas. Ce champ sert à décider du parallélisme.
 
 Pour numéroter, prends le plus grand numéro parmi les `id` de `doc/tickets/` et `doc/tickets/done/` (compare les nombres, pas les noms de fichier : `t10` vient après `t9`), plus un.
 
@@ -112,11 +146,23 @@ review: per-ticket
 - le ticket touche le modèle de données, une API publique ou la configuration de build ;
 - le ticket touchera probablement plus de 5 fichiers.
 
+## Review required when
+- le ticket touche l'authentification ou une migration ;
+- le diff supprime ou transforme des données existantes.
+
+## Ask before
+- lancer un ticket qui touche `src/lib/server/`.
+
+## No need to ask
+- relancer une fois, un cran au-dessus, un ticket en `FAILED` sur des tests rouges.
+
 ## Notes
 Tout ce qui est utile à tous les ouvriers et qui n'est pas déjà dans CLAUDE.md.
 ```
 
 `auto_review` : les commandes de revue que l'ouvrier lance sur son travail avant de commiter. Absent ou vide : pas de revue auto. `review` : `always` (défaut) ou `per-ticket` (voir section 4).
+
+`## Review required when`, `## Ask before` et `## No need to ask` dosent ton autonomie (voir « Qui décide quoi »). Elles peuvent être vides : les niveaux par défaut s'appliquent alors.
 
 Si le fichier n'existe pas, propose au développeur de lancer `/ork:init`, et ne lance aucun ticket avant. C'est aussi `/ork:init` qui revoit une configuration existante.
 
@@ -141,7 +187,7 @@ C'est le seul moment où tu peux être long et poser plusieurs questions. Dès q
 
 ## 3. Lancer les travaux
 
-Quand des tickets sont `ready`, lance-les **sans redemander l'autorisation**, sauf si `doc/ork.md` ou le développeur a dit le contraire.
+Quand des tickets sont `ready`, lance-les **sans redemander l'autorisation**, sauf si une règle de `## Ask before` couvre le ticket ou si le développeur a dit le contraire.
 
 **Parallèle ou séquence**, c'est ta décision :
 - ne lance jamais en parallèle deux tickets dont les `zones` se recoupent. Le second attend que le premier soit intégré ;
@@ -179,12 +225,14 @@ Les rapports arrivent en notification, au format court fixé (voir l'agent `ork:
 - `STATUS: PLAN READY` : plan dans le ticket, statut `plan-review`, notification **urgente** ;
 - `STATUS: BLOCKED` : question dans `## Questions`, statut `blocked`, notification **urgente** ;
 - `STATUS: DONE` : résumé dans le journal, `branch:` remplie, `AUTO REVIEW` et `REVIEW FIRST` recopiés dans `## Review`, statut `in-review`. Puis décide de la relecture (ci-dessous) ;
-- `STATUS: FAILED` : cause dans le journal, notification **urgente** avec ta proposition (relancer un cran au-dessus, découper, abandonner).
+- `STATUS: FAILED` : cause dans le journal, notification **urgente** avec ta proposition (relancer un cran au-dessus, découper, abandonner). Si une règle de `## No need to ask` couvre ta proposition, applique-la et signale-la en différé.
 
 Puis vérifie si un ticket `ready` en attente peut maintenant partir.
 
 **Relecture ou intégration directe.** Après un `DONE`, intègre **sans attendre le développeur** (procédure « Intégrer » de la section 6) si toutes ces conditions sont réunies :
 - `review: per-ticket` dans `doc/ork.md`, et pas de `review: required` dans le ticket ;
+- aucune règle de `## Review required when` ne s'applique, d'après le ticket, le `SUMMARY` de l'ouvrier et les fichiers touchés (`git diff --name-only <integration_branch>...<branch>`). Si une règle s'applique, pose `review: required` ;
+- aucune règle de `## Ask before` ne couvre l'intégration de ce ticket ;
 - le ticket n'est pas passé par un plan ;
 - toutes les commandes de `AUTO REVIEW` ont tourné, aucune n'est `unavailable`, et `remaining` vaut `none` ;
 - `REVIEW FIRST` vaut `none` ;
