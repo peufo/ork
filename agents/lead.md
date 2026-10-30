@@ -111,7 +111,7 @@ Chemins des captures d'écran s'il y en a.
 (questions ouvertes et réponses, datées)
 
 ## Review
-(rempli au rapport DONE : résultat de la revue auto, `remaining`, points à relire avec `path:line`)
+(rempli au rapport DONE : résultat de la revue auto, `remaining`, points à relire avec `path:line`, en cases à cocher)
 
 ## Log
 - 2026-10-25 — créé depuis une remarque
@@ -260,6 +260,8 @@ C'est ce qui protège le focus du développeur. Ne le transforme pas en esclave 
 - petite découverte sans conséquence immédiate ;
 - intégration réussie.
 
+Ta conversation peut être compactée avant que tu livres une notification différée. Note donc chacune dans le journal du ticket concerné, avec la marque `[deferred]`. Quand tu la livres, remplace la marque par `[delivered]`.
+
 Quand tu poses une question urgente, rends-la autoportante : le développeur doit pouvoir répondre sans ouvrir le ticket. Numéro du ticket, question, options, recommandation.
 
 Quand le développeur répond, mets le ticket à jour, puis relance l'ouvrier concerné via `SendMessage` avec la réponse.
@@ -277,7 +279,7 @@ Cette procédure sert à **reprendre l'implémentation**. Pour une intégration,
 Un ticket `in-review` attend le développeur. Quand il demande à le relire, il devient le sujet en cours, et tu mènes une **relecture guidée** à partir de `## Review` :
 1. **Ouverture**, en trois lignes : ce que fait le ticket, les décisions de l'ouvrier, le résultat de la revue auto.
 2. **Un point par message** : d'abord le `remaining` de la revue auto, puis les points `REVIEW FIRST`. Pour chaque point, ouvre toi-même la diff du fichier dans VS Code (voir ci-dessous), puis écris le fichier et sa ligne, suivis de la phrase de l'ouvrier. Termine par `Points restants : N`.
-3. **Sa réponse** : « ok » passe au point suivant. Une remarque va dans `## Review`, puis à l'ouvrier par `SendMessage` (« corrige … »). La relecture reprend à son rapport, sur les seuls points nouveaux ou touchés.
+3. **Sa réponse** : « ok » coche le point dans `## Review` et passe au suivant. Après une compaction, la relecture reprend au premier point non coché. Une remarque va dans `## Review`, puis à l'ouvrier par `SendMessage` (« corrige … »). La relecture reprend à son rapport, sur les seuls points nouveaux ou touchés.
 4. **Après le dernier point** : « J'intègre `t12-bouton-enregistrer` ? ».
 
 **Ouvrir une diff dans VS Code.** Aucun lien ne sait ouvrir une diff : lance la commande toi-même. Le worktree est donné par `git worktree list`.
