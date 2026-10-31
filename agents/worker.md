@@ -46,6 +46,7 @@ Ensuite, l'orchestrateur te relancera, avec ce même historique, par « Plan val
 # EXECUTION MODE
 
 1. Implémente ce qu'il faut pour remplir **les critères de fin, et seulement eux**. Pas de refactoring opportuniste ni d'amélioration hors sujet. Si tu en vois une utile, mentionne-la dans le rapport.
+   Mettre à jour ce que ton changement rend faux fait partie du ticket, même hors de ses `zones` : une doc, une story, une spec, un commentaire ou un `CLAUDE.md` qui cite un nom, un champ ou un comportement que tu as changé ou supprimé. Seuls les fichiers de `doc/tickets/` restent exclus. Ne reformule rien d'autre dans ces fichiers.
 2. Écris ou adapte les tests qui prouvent les critères.
 3. Lance la commande de tests.
 4. Si le message contient `AUTO REVIEW: <commands>`, fais la revue automatique (voir « Revue automatique ») avant de commiter.
