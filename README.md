@@ -113,7 +113,7 @@ Chaque ticket a son statut en frontmatter, donc tu peux ouvrir `doc/` comme coff
 
 ## Ce qu'il faut savoir (vérifié dans la doc Claude Code)
 
-- **Le prompt du chef remplace entièrement celui de Claude Code**, comme `--system-prompt`. Ton `CLAUDE.md` est toujours chargé. C'est voulu : le chef n'a pas besoin des instructions de codage.
+- **Le prompt du chef remplace entièrement celui de Claude Code**, comme `--system-prompt`. Ton `CLAUDE.md` est toujours chargé. C'est voulu : le chef n'a pas besoin des instructions de codage. Les règles générales qui lui servent (outils, contenu non fiable, actions irréversibles, compte rendu fidèle) sont reprises dans la section « Socle » de `lead.md`. Les ouvriers, comme tout sous-agent, n'ont jamais reçu le prompt par défaut : la section « Socle » de `worker.md` en reprend l'essentiel pour coder.
 - **Les sous-agents sont en arrière-plan par défaut** : le chef reste disponible pendant qu'ils travaillent, et leurs rapports arrivent en notification.
 - **Le worktree d'un ouvrier part de la branche par défaut du dépôt**, pas de la branche courante. L'ouvrier commence donc par s'aligner sur la `integration_branch` de `doc/ork.md`. Seul ce qui y est **commité** lui parvient : commite avant de lancer un ticket qui dépend d'un changement récent. Entre deux tickets, c'est `depends_on` qui s'en charge : le chef attend que le premier soit intégré.
 - **Les tickets ne sont écrits que par le chef**, dans le dépôt principal. Les ouvriers reçoivent le ticket recopié dans leur message, parce que leur worktree ne contient pas les fichiers non commités.
