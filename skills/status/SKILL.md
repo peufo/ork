@@ -9,40 +9,15 @@ Le développeur veut savoir où on en est : au démarrage d'une session, ou en c
 1. Lis `doc/ork.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.
 2. Relis le frontmatter et la section `## Questions` de tous les tickets de `doc/tickets/` (pas `done/`). Vérifie avec `git worktree list --porcelain` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore. Ne te fie pas à ta mémoire de conversation. Une dépendance (`depends_on`) qui ne correspond à aucun ticket, ni dans `doc/tickets/` ni dans `done/`, ou qui forme un cycle, va dans **À toi**.
 3. Un ticket en `planning` ou `in-progress` dont l'ouvrier (`agent:`) n'apparaît pas dans `ListAgents` est **arrêté** : son ouvrier ne tourne plus. En début de session, c'est le cas de tous. Ne te fie pas à ta mémoire de ce que tu as lancé : elle a pu être compactée. Ne le relance pas d'office : signale-le.
-4. Réponds avec cette structure, en omettant les groupes vides :
-
-**À toi** (ce qui attend une décision ou une réponse)
-- `tN-slug` : la question ou le plan à valider, en une ligne, avec ta recommandation
-
-**Arrêtés**
-- `tN-slug` : plan ou exécution, ce que dit la fin du journal. Propose de relancer : un nouvel ouvrier recevra le ticket complet, journal compris, et reprendra sur la branche existante (voir « Si l'ouvrier n'est plus joignable » dans tes instructions)
-
-**À relire**
-- `tN-slug` : résumé en une ligne, et ce qui demande ta relecture (points signalés, `remaining` de la revue auto, plan, `review: required`)
-
-**Intégré sans relecture** (les tickets de `done/` dont le journal note une intégration sans relecture marquée `[deferred]`)
-- `tN-slug` : résumé en une ligne
-
-**À savoir** (les autres lignes `[deferred]`, comme une petite découverte)
-- `tN-slug` : la ligne du journal
-
-**En cours**
-- `tN-slug` : plan ou exécution, depuis quand
-
-**Prêt à partir**
-- `tN-slug` : et pourquoi il attend (dépend de `t11-slug` encore `in-progress`, zones en conflit avec un ticket en cours, limite de parallélisme…)
-
-**Idées à clarifier**
-- `tN-slug`
-
-**Worktrees à surveiller** (ce groupe n'apparaît que si l'un d'eux est concerné)
-Hors dépôt principal, retiens les worktrees qui :
-- ne sont liés à aucun ticket ouvert (session lancée à part, ou ticket déjà clos) ;
-- n'ont rien à intégrer (propres, et sans avance sur `integration_branch`) ;
-- portent des modifications non commitées.
-
-| worktree | branche | avance / retard | fichiers sales | dernière activité | verrou |
-|---|---|---|---|---|---|
+4. Réponds en lignes d'état (voir « Les lignes d'état » dans tes instructions), une par ticket, dans l'ordre de leur tableau :
+   - **arrêté** : `` [STOP] `tN-slug` : plan ou exécution, ce que dit la fin du journal ``. Le relancer, c'est donner à un nouvel ouvrier le ticket complet, journal compris, sur la branche existante (voir « Si l'ouvrier n'est plus joignable » dans tes instructions) ;
+   - **intégré sans relecture** (un ticket de `done/` dont le journal note une intégration sans relecture marquée `[deferred]`) : `` [OK] `tN-slug` -> `<integration_branch>` : sans relecture `` ;
+   - **en cours** : `` [RUN] `tN-slug` : plan ou exécution, depuis quand `` ;
+   - **prêt à partir** : `` [DEP] `tN-slug` -> `t11-slug` `` s'il attend un ticket (`depends_on` encore ouvert, zones en conflit avec un ticket en cours), sinon `` [READY] `tN-slug` : raison `` (limite de parallélisme, `## Ask before`…) ;
+   - **idée à clarifier** : `` [IDEA] `tN-slug` `` ;
+   - **à savoir** (les autres lignes `[deferred]`, comme une petite découverte) : `` [NOTE] `tN-slug` : la ligne du journal `` ;
+   - **worktree à surveiller** : `` [WT] `<worktree>` (`<branch>`) : avance, retard, fichiers sales, dernière activité, verrou ``, en omettant ce qui vaut zéro. Hors dépôt principal, retiens les worktrees qui ne sont liés à aucun ticket ouvert (session lancée à part, ou ticket déjà clos), qui n'ont rien à intégrer (propres, et sans avance sur `integration_branch`), ou qui portent des modifications non commitées. Pour un worktree hors ticket qui a de l'avance, ajoute `` [HINT] `intègre <name>` ``. Pour un worktree qui n'a rien à intégrer, propose de le supprimer de la même façon ;
+   - **ce qui attend le développeur** (question, plan à valider, échec, ticket `in-review` avec ce qui demande sa relecture : points signalés, `remaining` de la revue auto, plan, `review: required`) : en sujets, voir l'étape 5.
 
 ```bash
 git rev-list --left-right --count <integration_branch>...<branch>   # retard, avance
@@ -50,10 +25,8 @@ git -C <wt> status --short | wc -l
 git -C <wt> log -1 --format=%cr
 ```
 
-Pour un worktree hors ticket qui a de l'avance, propose « intègre <name> ». Pour un worktree qui n'a rien à intégrer, propose de le supprimer.
+5. S'il y a des sujets, le premier dans l'ordre de la file devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : les autres font chacun une ligne `[WAIT]`, et tu termines en présentant le premier selon « Présenter un sujet ». Sinon, termine par **une seule** proposition, la plus utile maintenant, présentée en sujet avec ses actions (`` `relance` : relancer `t13-supprimer-deck` ``, `` `relis` : ouvrir la relecture de `t12-bouton-enregistrer` ``).
 
-5. Si le groupe « À toi » n'est pas vide, son premier élément devient le sujet en cours (voir « Un sujet à la fois » dans tes instructions) : termine en le présentant selon « Présenter un sujet ». Sinon, termine par **une seule** proposition d'action, la plus utile maintenant (« Je relance `t13-supprimer-deck` ? », « Tu veux relire `t12-bouton-enregistrer` ? »).
-
-Reste court. Si un groupe dépasse 5 tickets, montre les 5 plus prioritaires et le nombre restant.
+Reste court. Au-delà de 5 lignes pour un même tag, montre les 5 plus prioritaires puis `[TAG] +N`.
 
 $ARGUMENTS

@@ -12,7 +12,7 @@ $ARGUMENTS
 
 | Chemin | Rôle |
 |---|---|
-| `doc/ork.md` | configuration : frontmatter (`test_command`, `integration_branch`, `max_parallel`, `auto_review`, `review`), puis les sections `## Plan required when`, `## Review required when`, `## Ask before`, `## No need to ask` et `## Notes` |
+| `doc/ork.md` | configuration : frontmatter (`test_command`, `integration_branch`, `max_parallel`, `auto_review`, `review`, `confidence_threshold`), puis les sections `## Plan required when`, `## Review required when`, `## Ask before`, `## No need to ask` et `## Notes` |
 | `doc/story/` | les stories, une par fichier |
 | `doc/tickets/` | les tickets ouverts |
 | `doc/tickets/captures/` | les captures d'écran jointes |
@@ -52,7 +52,7 @@ Lance **un seul** `ork:scout`, avec ces questions. Garde sa conclusion, pas le d
 
 Présente tout en **un seul message**, en groupant :
 
-- **La configuration proposée :** le frontmatter complet, puis les règles « Plan required when » adaptées au dépôt (modèle de données, API publique, auth, build, nombre de fichiers). Pour `max_parallel`, propose `1` la première semaine. Si une ressource partagée a été trouvée, dis pourquoi le parallélisme est risqué. Pour la revue, propose `auto_review: [/simplify]` et `review: always` la première semaine : le développeur juge la qualité de la revue auto avant de passer à `per-ticket`. Propose des règles `## Review required when` à partir des zones sensibles trouvées. Laisse `## Ask before` et `## No need to ask` vides : elles se remplissent avec les corrections du développeur.
+- **La configuration proposée :** le frontmatter complet, puis les règles « Plan required when » adaptées au dépôt (modèle de données, API publique, auth, build, nombre de fichiers). Pour `max_parallel`, propose `1` la première semaine. Si une ressource partagée a été trouvée, dis pourquoi le parallélisme est risqué. Pour la revue, propose `auto_review: [/simplify]` et `review: always` la première semaine : le développeur juge la qualité de la revue auto avant de passer à `per-ticket`. Pour la même raison, laisse `confidence_threshold` absent la première semaine : le développeur voit tous les points avec leur note, et juge à partir de quelle note il peut les laisser passer. Propose des règles `## Review required when` à partir des zones sensibles trouvées. Laisse `## Ask before` et `## No need to ask` vides : elles se remplissent avec les corrections du développeur.
 - **Les écarts de dossiers :** chemin actuel → convention, et le nombre de références à mettre à jour.
 - **Ce qui manque à `CLAUDE.md` :** le texte que tu proposes d'y ajouter, dans une section du type « Git, worktrees et intégration ».
 - **Les doublons :** ce qu'il faut en garder (dans `CLAUDE.md`) et ce que tu proposes de supprimer.

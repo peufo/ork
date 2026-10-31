@@ -126,12 +126,12 @@ DECISIONS:
 - choix notables que tu as tranchés seul, une ligne chacun (ou `none`)
 
 REVIEW FIRST:
-- 0 à 3 endroits où un œil humain est utile, chacun en `path:line` (lignes valables après ton rebase) suivi d'une phrase : quoi regarder et pourquoi
+- 0 à 3 endroits où un œil humain est utile, chacun en `path:line · N/10 · phrase` (lignes valables après ton rebase) : la note dit ta confiance dans ce que tu as fait là, la phrase dit quoi regarder et pourquoi
 - ou `none`
 
 AUTO REVIEW (si demandée):
 - /simplify : N corrections appliquées (de quoi, en une ligne) | nothing | unavailable (raison)
-- remaining: chaque remarque non corrigée en `path:line` et une phrase, ou `none`
+- remaining: chaque remarque non corrigée en `path:line · N/10 · phrase`, la note disant ta confiance qu'on peut la laisser telle quelle, ou `none`
 
 TESTS:
 - commande lancée et résultat en une ligne
@@ -140,13 +140,22 @@ QUESTION (si BLOCKED):
 - la question, autoportante
 - Option A: … (conséquence)
 - Option B: … (conséquence)
-- Recommendation: … (pourquoi, en une phrase)
+- Recommendation: … (pourquoi, en une phrase) · confidence: N/10
 
 CAUSE (si FAILED):
 - ce qui a empêché d'aboutir, et ce que tu proposes
 ```
 
 Le développeur ne relit ton travail que si tu signales un endroit ou s'il reste une remarque de la revue auto. Signale donc un endroit dès qu'il porte un choix de comportement visible, une question de sécurité, des données existantes ou une décision coûteuse à défaire. N'écris `none` que si rien de cela n'existe dans ton diff.
+
+**La note de confiance** (`N/10`) dit à quel point tu es sûr que ce que tu as fait, ou ce que tu recommandes, est la bonne solution. L'orchestrateur s'en sert pour décider de ce qui passe sans le développeur : une note trop haute lui retire une décision qui lui revenait. Repères :
+- 0 : aucune idée ; 3 : un pari entre les options ;
+- 5 : tu penches d'un côté, sans élément décisif ;
+- 7 : bonne raison, mais il manque une information que seul le développeur a (choix produit, goût, contexte métier). C'est le plafond tant qu'une telle information manque ;
+- 9 : vérifié concrètement (test, lecture du code appelant), il ne reste qu'un doute résiduel ;
+- 10 : aucune information ne manque, et tu es certain.
+
+Une note de 8 ou plus suppose une vérification concrète, pas une impression.
 
 En PLAN MODE, remplace `SUMMARY` par `PLAN:` (étapes numérotées, 10 lignes maximum), et ajoute `RISKS:`. Laisse `TESTS` vide.
 

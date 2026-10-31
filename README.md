@@ -53,7 +53,28 @@ claude --agent ork:lead
 
 Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:status`.
 
-Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Chaque sujet suit le même gabarit : un titre avec la nature du sujet et le ticket, une ligne de statut (l'étape, par exemple `point 2/4` d'une relecture, et le compte des autres sujets en attente), le corps, puis une ligne d'actions avec les réponses attendues (`**1** · **2** · **sujet suivant**`). Pour passer à un autre sujet, dis « sujet suivant ».
+Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Ses messages commencent par des lignes d'état, une par fait, qui se lisent d'un coup d'œil :
+
+```
+[OK] `t21-nom-deck-langue-automatique` -> `dev`
+[HINT] `bun run sandbox:reset` pour voir le deck Anglais
+[DEP] `t22-remote-functions-auth-oauth` -> `t27-colonnes-state-before`
+[WAIT] 👀 `t28-traduire-langue-apprise-vers-connue`
+
+### 👀 t27-colonnes-state-before · 2 à relire sur 4
+Remplace le JSON `state_before` de `review_logs` par 9 colonnes typées.
+6 fichiers · +182 −40 · 3 commits
+
+1. [5/10] `migration.sql:17` : casts vers `TIMESTAMP(3)` et `review_state`
+2. [6/10] `decks.md:25` : la story cite encore `ReviewLog.stateBefore`
+3. [8/10] ✓ `schema.ts:40` : noms des colonnes, validés au plan
+4. [9/10] ✓ `amend.test.ts:1` : nouveau test `amend`
+
+`relis` : commencer par le point 1
+`sujet suivant` : passer à `t28-traduire-langue-apprise-vers-connue`
+```
+
+Vient ensuite le sujet en cours : l'icône de sa nature, le ticket et l'étape (par exemple `point 2/4` d'une relecture), un corps de quelques lignes, puis une ligne par réponse attendue. Les autres sujets en attente sont les lignes `[WAIT]`. Pour passer à un autre sujet, dis « sujet suivant ». Le vocabulaire complet est dans « Les lignes d'état » de `agents/lead.md`.
 
 Un alias rend ça confortable :
 
@@ -96,7 +117,8 @@ Pour le mode de permission, le mode **auto** (une fois validé dans ton environn
 - **Il te dérange seulement pour** une question bloquante, un plan à valider, un échec ou un fait nouveau. Le reste attend ton `/ork:status`.
 - **Il te demande trop, ou pas assez ?** Dis-le (« pas besoin de me demander ça », « demande-moi avant »). Il propose une règle d'une ligne pour `## Ask before` ou `## No need to ask` dans `doc/ork.md`, et l'écrit après ton accord. Le tableau « Qui décide quoi » de `agents/lead.md` donne les niveaux par défaut. Push, force, dépôt principal sale et validation des plans restent hors dosage.
 - **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]` dans `doc/ork.md`, chaque ouvrier passe ces revues sur son travail avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue auto est propre et où l'ouvrier ne signale rien. `review: required` dans un ticket force ta relecture. Le chef le pose seul quand une règle de `## Review required when` s'applique (auth, migrations…).
-- **Relecture guidée** : « relisons t12 » te donne le résumé en trois lignes, puis chaque point délicat, un par message, en ouvrant la diff du fichier dans VS Code (`code -d`, avant / après). Tu réponds « ok » ou une remarque, que le chef transmet à l'ouvrier. Puis « intègre t12 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en INTEGRATION MODE). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
+- **Note de confiance** : chaque point de relecture et chaque recommandation d'un ouvrier porte une note sur 10 (0 : aucune idée, 10 : rien ne manque, certain). `confidence_threshold: 8` dans `doc/ork.md` laisse passer ce qui atteint 8 : le point est coché d'office, la question est tranchée par la recommandation et signalée par une ligne `[AUTO]`. Absent : tu vois tout ; `0` : tout passe. Les plans, `review: required` et `## Ask before` passent toujours par toi.
+- **Relecture guidée** : « relisons t12 » te donne une vue d'ensemble (ce que fait le ticket, le volume du diff, tous les points triés par note, ceux cochés d'office marqués `✓`), puis chaque point à relire, un par message, en ouvrant la diff du fichier dans VS Code (`code -d`, avant / après). Tu réponds « ok » ou une remarque, que le chef transmet à l'ouvrier. Puis « intègre t12 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en INTEGRATION MODE). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
 - **Worktree hors ticket** : « intègre <worktree> » fonctionne aussi pour une session lancée à part. `/ork:status` signale ces worktrees orphelins.
 - **Conventions du projet** : ork reste générique. Ce qui est propre au projet va dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés à régénérer plutôt que fusionner, vérifications supplémentaires selon les zones, style de commit.
 
