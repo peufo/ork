@@ -58,8 +58,10 @@ Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse 
 Un alias rend ça confortable :
 
 ```bash
-alias ork='claude --agent ork:lead'
+alias ork='claude --agent ork:lead --name ork'
 ```
+
+`--name` donne un nom à la session : il s'affiche dans le titre de l'onglet du terminal, dans la zone de saisie et dans `/resume`. Tu repères ainsi l'onglet du chef parmi les autres sessions.
 
 Tu peux aussi en faire le comportement par défaut d'un projet sans rien commiter, avec `.claude/settings.local.json` :
 
@@ -81,7 +83,7 @@ Toujours dans `.claude/settings.local.json` du projet, ou dans `~/.claude/settin
 
 Ce réglage empêche Claude de « forker » la conversation, car un fork hérite de toute la conversation de l'orchestrateur. Le prompt du chef l'interdit déjà, ceci n'est qu'un filet de sécurité.
 
-Pour que le chef reprenne seul après la limite d'usage de ton abonnement, active **« Continue automatically at usage limit »** dans `/config`. Ce réglage de Claude Code ne passe pas par le plugin. Au reset, la session attend dans le terminal puis reprend la tâche interrompue. Il faut que la session reste ouverte (pas de terminal fermé ni de Mac en veille) et qu'elle soit connectée avec un abonnement claude.ai, pas avec une clé API.
+Le chef peut reprendre seul après la limite d'usage de ton abonnement. Quand la limite tombe, Claude Code affiche un menu : choisis d'attendre le reset, et la session reprend la tâche interrompue. Ce comportement dépend du réglage **« Continue automatically at usage limit »** du `/config` du terminal (absent des réglages de l'extension VS Code). Ce réglage est actif par défaut. Ce n'est pas un réglage du plugin. Il faut que la session reste ouverte (pas de terminal fermé ni de Mac en veille) et qu'elle soit connectée avec un abonnement claude.ai, pas avec une clé API. Une demande d'autorisation peut encore la mettre en pause, et Échap annule l'attente.
 
 Pour le mode de permission, le mode **auto** (une fois validé dans ton environnement) évite que chaque commande d'un ouvrier vienne te demander une approbation. Les sous-agents héritent du mode de la session principale. En mode manuel, les demandes d'autorisation des ouvriers en arrière-plan remontent dans la session du chef, avec le nom de l'ouvrier qui demande.
 
