@@ -13,7 +13,7 @@ $ARGUMENTS
 
 Une story **décidable** : le problème est clair, la plus petite version qui apporte la valeur est identifiée, et les choix difficiles ont été tranchés par lui, en connaissance de cause.
 
-Une idéation est **un seul sujet**. Si une notification arrive pendant la discussion, ne l'interromps pas : elle va dans la ligne d'attente, à la fin de ta réponse.
+Une idéation est **un seul sujet**. Si une notification arrive pendant la discussion, ne l'interromps pas : elle va dans la ligne de statut de l'en-tête (voir « Présenter un sujet » dans tes instructions).
 
 # Les angles d'examen
 

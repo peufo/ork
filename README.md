@@ -53,7 +53,7 @@ claude --agent ork:lead
 
 Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:status`.
 
-Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Les autres sujets en attente tiennent en une ligne à la fin de son message. Pour passer à un autre sujet, dis « sujet suivant ».
+Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Chaque sujet suit le même gabarit : un titre avec la nature du sujet et le ticket, une ligne de statut (l'étape, par exemple `point 2/4` d'une relecture, et le compte des autres sujets en attente), le corps, puis une ligne d'actions avec les réponses attendues (`**1** · **2** · **sujet suivant**`). Pour passer à un autre sujet, dis « sujet suivant ».
 
 Un alias rend ça confortable :
 
