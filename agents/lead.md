@@ -309,7 +309,7 @@ Un ticket `in-review` attend le développeur. Quand il demande à le relire, il 
 
    Exemple :
    ```markdown
-   ### 👀 t27-colonnes-state-before · 2 à relire sur 4
+   ### 👀 [t27-colonnes-state-before](doc/tickets/t27-colonnes-state-before.md) · 2 à relire sur 4
    Remplace le JSON `state_before` de `review_logs` par 9 colonnes typées.
    6 fichiers · +182 −40 · 3 commits
    - Décision : migration écrite à la main, JSON reconstruit identique sur les 124 logs du bac à sable
@@ -448,13 +448,13 @@ Un message sans sujet (réponse à une remarque, notification différée) ne con
 Chaque sujet suit le même gabarit, sous les lignes d'état, pour que le développeur sache d'un coup d'œil de quoi on parle, où on en est et ce qu'il peut répondre : une question bloquée, un plan, un échec, un point de relecture, une proposition d'intégration, un tour d'idéation.
 
 ```markdown
-### <icône> tN-slug · <étape>
+### <icône> [tN-slug](doc/tickets/tN-slug.md) · <étape>
 <corps>
 
 `<mot>` : <effet>
 ```
 
-**En-tête.** L'icône de la nature, la même que dans la status line : ⏸ question, 📋 plan, ❌ échec, 👀 relecture, 🔀 intégration, 💡 idéation (le titre de la story à la place du ticket). Puis l'étape : `ouvrier en pause`, `plan à valider`, `relance proposée`, `2 à relire sur 4`, `point 1/2 · 5/10`, `relecture terminée`, `rebase vérifié`, ou le point de la story en discussion.
+**En-tête.** L'icône de la nature, la même que dans la status line : ⏸ question, 📋 plan, ❌ échec, 👀 relecture, 🔀 intégration, 💡 idéation (le titre de la story à la place du ticket). Le ticket, ou la story, est un lien vers son fichier, en chemin relatif à la racine du dépôt, pour que le développeur l'ouvre d'un clic. Puis l'étape : `ouvrier en pause`, `plan à valider`, `relance proposée`, `2 à relire sur 4`, `point 1/2 · 5/10`, `relecture terminée`, `rebase vérifié`, ou le point de la story en discussion.
 
 **Corps**, selon la nature, en trois lignes au plus sauf pour l'idéation et la vue d'ensemble d'une relecture :
 - Question : une ou deux lignes de contexte, puis la question en gras.
@@ -473,7 +473,7 @@ Exemple :
 [OK] `t12-bouton-enregistrer` -> `main` : sans relecture
 [WAIT] 👀 `t11-renommer-deck`
 
-### ⏸ t14-export-pdf · ouvrier en pause
+### ⏸ [t14-export-pdf](doc/tickets/t14-export-pdf.md) · ouvrier en pause
 L'export passe par la nouvelle génération PDF. L'ancien export CSV est encore appelé depuis la page Clients.
 **Garder l'ancien export CSV ?**
 

@@ -61,7 +61,7 @@ Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse 
 [DEP] `t22-remote-functions-auth-oauth` -> `t27-colonnes-state-before`
 [WAIT] 👀 `t28-traduire-langue-apprise-vers-connue`
 
-### 👀 t27-colonnes-state-before · 2 à relire sur 4
+### 👀 [t27-colonnes-state-before](doc/tickets/t27-colonnes-state-before.md) · 2 à relire sur 4
 Remplace le JSON `state_before` de `review_logs` par 9 colonnes typées.
 6 fichiers · +182 −40 · 3 commits
 
@@ -74,7 +74,7 @@ Remplace le JSON `state_before` de `review_logs` par 9 colonnes typées.
 `sujet suivant` : passer à `t28-traduire-langue-apprise-vers-connue`
 ```
 
-Vient ensuite le sujet en cours : l'icône de sa nature, le ticket et l'étape (par exemple `point 2/4` d'une relecture), un corps de quelques lignes, puis une ligne par réponse attendue. Les autres sujets en attente sont les lignes `[WAIT]`. Pour passer à un autre sujet, dis « sujet suivant ». Le vocabulaire complet est dans « Les lignes d'état » de `agents/lead.md`.
+Vient ensuite le sujet en cours : l'icône de sa nature, le ticket (un lien vers son fichier) et l'étape (par exemple `point 2/4` d'une relecture), un corps de quelques lignes, puis une ligne par réponse attendue. Les autres sujets en attente sont les lignes `[WAIT]`. Pour passer à un autre sujet, dis « sujet suivant ». Le vocabulaire complet est dans « Les lignes d'état » de `agents/lead.md`.
 
 Un alias rend ça confortable :
 
