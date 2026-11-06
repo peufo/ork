@@ -1,8 +1,12 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestParseFrontmatter(t *testing.T) {
@@ -185,5 +189,27 @@ func TestNaturalLess(t *testing.T) {
 	}
 	if !naturalLess("a", "ab") || !naturalLess("A", "b") {
 		t.Error("prefix or case order")
+	}
+}
+
+func TestDoneTicketsOfTheSameDayFollowTheirFileTime(t *testing.T) {
+	store := newFixture(t, map[string]string{
+		"tickets/done/t38-a.md": "---\nid: t38\nupdated: 2026-11-06\n---\n",
+		"tickets/done/t26-b.md": "---\nid: t26\nupdated: 2026-11-06\n---\n",
+		"tickets/done/t40-c.md": "---\nid: t40\nupdated: 2026-11-05\n---\n",
+	})
+	now := time.Date(2026, 11, 6, 12, 0, 0, 0, time.UTC)
+	for name, at := range map[string]time.Time{
+		"t38-a.md": now.Add(-time.Hour),
+		"t26-b.md": now,
+		"t40-c.md": now.Add(time.Hour),
+	} {
+		if err := os.Chtimes(filepath.Join(store.root, "tickets/done", name), at, at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got := strings.Join(columnIDs(buildBoard(store.loadTickets()), statusDone), " ")
+	if want := "t26 t38 t40"; got != want {
+		t.Errorf("done = %s, want %s: the date comes first, then the file time", got, want)
 	}
 }

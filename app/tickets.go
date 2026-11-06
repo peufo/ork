@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 // field is one frontmatter property, in file order.
@@ -154,6 +155,7 @@ type ticket struct {
 	Malformed bool     `json:"malformed"`
 	Agent     string   `json:"-"`
 	column    string
+	modTime   time.Time
 }
 
 // newTicket never rejects a file: what it cannot read sends the ticket to the
@@ -269,9 +271,13 @@ func queuedBefore(a, b ticket) bool {
 	return naturalLess(a.ID, b.ID)
 }
 
+// finishedBefore relies on the file's time within a day: `updated` has no hour.
 func finishedBefore(a, b ticket) bool {
 	if a.Updated != b.Updated {
 		return a.Updated > b.Updated
+	}
+	if !a.modTime.Equal(b.modTime) {
+		return a.modTime.After(b.modTime)
 	}
 	return naturalLess(b.ID, a.ID)
 }
@@ -307,13 +313,12 @@ func (d *docStore) loadTicketDir(rel string, inDone bool) []ticket {
 			continue
 		}
 		content, err := d.read(child)
-		if err != nil {
-			t := newTicket(child, "", inDone)
-			t.Malformed = true
-			tickets = append(tickets, t)
-			continue
+		t := newTicket(child, content, inDone)
+		t.Malformed = t.Malformed || err != nil
+		if info, err := entry.Info(); err == nil {
+			t.modTime = info.ModTime()
 		}
-		tickets = append(tickets, newTicket(child, content, inDone))
+		tickets = append(tickets, t)
 	}
 	return tickets
 }
