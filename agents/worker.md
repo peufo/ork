@@ -111,13 +111,22 @@ Ne contourne jamais un blocage en inventant, en simulant ou en devinant (faux se
 
 Une fois la réponse reçue (l'orchestrateur te relance avec l'historique complet), reprends là où tu en étais.
 
+# Quand on te demande de t'arrêter
+
+Si un message contient `STOP AT NEXT STABLE POINT`, tu t'arrêtes proprement au plus vite :
+1. finis le geste en cours, sans en commencer un nouveau. Si un rebase est en cours, termine-le s'il est simple, sinon fais `git rebase --abort` ;
+2. si le travail est terminé et vérifié, rends ton rapport normal. Sinon, commite ce qui est fait sur ta branche, en commençant le message par `wip:`, même si les tests ne passent pas encore. Ce commit ne quitte pas ta branche ;
+3. rends un rapport avec `STATUS: PAUSED`. `SUMMARY` dit ce qui est fait et ce qui reste, `TESTS` dit l'état réel.
+
+À la reprise, refais le commit `wip:` proprement avant de rendre `DONE`. Ne le laisse jamais dans un rapport `DONE`.
+
 # Format du rapport, obligatoire
 
 Ton dernier message est **uniquement** ce rapport, court. Pas de récit de ton travail, pas de diff, pas de code.
 
 ```
 TICKET: t12
-STATUS: DONE | PLAN READY | BLOCKED | FAILED
+STATUS: DONE | PLAN READY | BLOCKED | FAILED | PAUSED
 BRANCH: ticket/t12-bouton-envoi
 
 SUMMARY:

@@ -1,6 +1,6 @@
 ---
 name: init
-description: Configurer ork dans un dépôt, revoir sa configuration, ou migrer un projet de `doc/ork.md` vers `.ork/`. Détecte les commandes et la branche d'intégration, aligne les dossiers sur les conventions d'ork, vérifie que CLAUDE.md donne aux ouvriers ce dont ils ont besoin, puis écrit `.ork/config.md` après accord.
+description: Configurer ork dans un dépôt ou revoir sa configuration. Détecte les commandes et la branche d'intégration, aligne les dossiers sur les conventions d'ork, vérifie que CLAUDE.md donne aux ouvriers ce dont ils ont besoin, puis écrit `.ork/config.md` après accord.
 disable-model-invocation: true
 ---
 
@@ -22,20 +22,54 @@ $ARGUMENTS
 
 Ce qui est propre au projet ne va pas dans `.ork/config.md`, mais dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés, vérifications supplémentaires, style de commit. `.ork/config.md` ne garde que la configuration d'ork et les écarts aux conventions.
 
+# Le fichier `.ork/config.md`
+
+```markdown
+---
+docs_dir: doc/
+test_command: npm run check && npm test
+integration_branch: main
+max_parallel: 2
+auto_review: [/simplify, /code-review medium --fix]
+review: per-ticket
+confidence_threshold: 8
+---
+
+## Plan required when
+- le ticket touche le modèle de données, une API publique ou la configuration de build ;
+- le ticket touchera probablement plus de 5 fichiers.
+
+## Review required when
+- le ticket touche l'authentification ou une migration ;
+- le diff supprime ou transforme des données existantes.
+
+## Ask before
+- lancer un ticket qui touche `src/lib/server/`.
+
+## No need to ask
+- relancer une fois, un cran au-dessus, un ticket en `FAILED` sur des tests rouges.
+
+## Notes
+Tout ce qui est utile à tous les ouvriers et qui n'est pas déjà dans CLAUDE.md.
+```
+
+- `docs_dir` : le dossier de documentation du projet, qui contient les stories. Absent : `doc/`. C'est un sous-dossier du dépôt, non caché.
+- `auto_review` : les commandes de revue que l'ouvrier lance avant de commiter. Absent ou vide : pas de revue auto.
+- `review` : `always` (défaut) ou `per-ticket`, qui permet au chef d'intégrer seul un ticket sans plan dont la revue est propre.
+- `confidence_threshold` : ce qui atteint cette note passe sans le développeur. Absent : tout est montré. `0` : tout passe.
+
 # 1. Point de départ
 
 - Si `.ork/config.md` existe, tu es en **révision** : lis-le, et ne propose ensuite que les écarts entre ce fichier et ce que tu détectes.
-- Sinon, si `doc/ork.md` existe, c'est une **migration** : le projet suit l'ancien emplacement. Lis ce fichier. Tu proposes la migration, puis tu continues comme une révision.
 - Sinon, c'est une **installation**.
 - Note la branche courante et `git status --short`. Ne touche pas aux modifications que tu y trouves.
-- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches trois réglages :
-  - `"agent": "ork:lead"` : le chef devient la session par défaut du projet ;
+- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches deux réglages :
+  - `"outputStyle": "ork:ork"` : le chef devient le rôle des sessions principales de ce projet. Ouvre-les sans worktree ;
   - `"permissions": { "deny": ["Agent(fork)"] }` : un filet de sécurité contre les forks, qui héritent de toute la conversation du chef ;
-  - `"statusLine": { "type": "command", "command": "sh ${CLAUDE_PLUGIN_ROOT}/scripts/statusline.sh" }` : ce qui attend le développeur dans les tickets, toujours visible dans le terminal. Elle demande `jq`. Si une autre `statusLine` existe, ne la remplace pas : signale-la. Regarde aussi `~/.claude/settings.json`, où elle a pu être posée pour tous les projets.
 
 # 2. Enquête
 
-Lance **un seul** `ork:scout`, avec ces questions. Garde sa conclusion, pas le détail.
+Lance **un seul** agent `Explore` (modèle `sonnet`, sans rien modifier), avec ces questions. Garde sa conclusion, pas le détail.
 
 1. **Commandes :** quelles commandes vérifient le projet (types, lint, tests, contrat ou code généré) ? Comment les lance la CI (`.github/workflows/`, etc.) ? Propose une `test_command` unique, enchaînée avec `&&`.
 2. **Branche d'intégration :** sur quelle branche le travail quotidien est-il posé ? Indices : branche courante, branche par défaut du remote, branches de la CI, conventions écrites dans `CLAUDE.md` ou dans la doc.
@@ -51,16 +85,11 @@ Lance **un seul** `ork:scout`, avec ces questions. Garde sa conclusion, pas le d
 6. **Ressources partagées :** une ressource commune rend-elle dangereux deux ouvriers en parallèle ? Exemples : une base de test unique, un port fixe, un dossier de sortie partagé.
 7. **Tickets dans git :** s'il y a déjà des tickets, sont-ils versionnés, ou ignorés par `.gitignore` ?
 8. **Zones sensibles :** quels dossiers portent l'authentification, les droits, les paiements, les migrations ou la suppression de données ?
-9. **Migration seulement :** liste toutes les références à l'ancien emplacement, tickets de `done/` compris :
-   - les chemins depuis la racine : `git grep -n -I --untracked -E 'doc/tickets|doc/ork\.md'`, plus `grep -rn` dans `doc/tickets/` si les tickets sont ignorés par git ;
-   - les liens relatifs qui traversent la frontière : depuis un ticket vers le reste de `doc/` (`](../story/a.md)`), depuis un document vers un ticket (`](../tickets/t1.md)`) ;
-   - les références construites ou indirectes (glob, filtre, variable, script).
 
 # 3. Proposition
 
 Présente tout en **un seul message**, en groupant :
 
-- **La migration**, si le projet suit l'ancien emplacement : ce qui bouge (`doc/ork.md` → `.ork/config.md`, `doc/tickets/` → `.ork/tickets/`), ce qui reste (les stories et le reste de la documentation), le nombre de références à mettre à jour, archives comprises.
 - **La configuration proposée :** le frontmatter complet, puis les règles « Plan required when » adaptées au dépôt (modèle de données, API publique, auth, build, nombre de fichiers). Pour `max_parallel`, propose `1` la première semaine. Si une ressource partagée a été trouvée, dis pourquoi le parallélisme est risqué. Pour la revue, propose `auto_review: [/simplify]` et `review: always` la première semaine : le développeur juge la qualité de la revue auto avant de passer à `per-ticket`. Pour la même raison, laisse `confidence_threshold` absent la première semaine : le développeur voit tous les points avec leur note, et juge à partir de quelle note il peut les laisser passer. Propose des règles `## Review required when` à partir des zones sensibles trouvées. Laisse `## Ask before` et `## No need to ask` vides : elles se remplissent avec les corrections du développeur.
 - **Les écarts de dossiers :** chemin actuel → convention, et le nombre de références à mettre à jour.
 - **Ce qui manque à `CLAUDE.md` :** le texte que tu proposes d'y ajouter, dans une section du type « Git, worktrees et intégration ».
@@ -69,7 +98,6 @@ Présente tout en **un seul message**, en groupant :
 
 Puis fais trancher avec `AskUserQuestion`, en quatre questions au plus par appel :
 
-- **La migration**, si le projet suit l'ancien emplacement : « Migrer vers `.ork/` (Recommandé) », ou « Pas maintenant ». Dans ce second cas, n'applique rien et arrête-toi : le chef, la micro-app et la status line ne lisent plus que `.ork/`.
 - **Un dossier hors convention, par question :**
   - « Renommer et mettre à jour les références (Recommandé) », toujours en premier ;
   - « Garder le dossier, ajouter une note dans `.ork/config.md` ».
@@ -86,20 +114,6 @@ Puis fais trancher avec `AskUserQuestion`, en quatre questions au plus par appel
 
 Dans cet ordre, uniquement ce qui a été accepté.
 
-0. **Migrer vers `.ork/` :**
-   - si un ticket est en `planning` ou `in-progress` et que son ouvrier (`agent:`) apparaît dans `ListAgents`, arrête-toi : la migration attend la fin de son travail ;
-   - déplace, avec `git mv` si le chemin est suivi, `mv` sinon :
-     ```bash
-     mkdir -p .ork
-     git mv doc/tickets .ork/tickets
-     git mv doc/ork.md .ork/config.md
-     ```
-     Les tickets non commités suivent le dossier, avec leurs modifications ;
-   - remplace chaque référence que l'enquête a trouvée, y compris dans `.gitignore` et dans les tickets de `done/`. C'est la seule exception à la règle des archives, parce que leurs liens casseraient :
-     - `doc/tickets/` → `.ork/tickets/` et `doc/ork.md` → `.ork/config.md` ;
-     - un lien relatif qui traverse la frontière devient un chemin depuis la racine : `../story/a.md` → `doc/story/a.md`, `../tickets/t1.md` → `.ork/tickets/t1.md` ;
-   - **vérifie** avec `git grep -n -I --untracked -E 'doc/tickets|doc/ork\.md'`. Le résultat doit être vide. Traite une référence construite comme à l'étape 1 ;
-   - ajoute `docs_dir` au frontmatter de `.ork/config.md`. Ne déplace rien d'autre dans `doc/`.
 1. **Renommer un dossier :**
    - `git mv <old> <new>` si le dossier est suivi, `mv` sinon ;
    - remplace chaque chemin écrit en clair que l'enquête a trouvé. Ce sont des remplacements de texte exacts : ne modifie rien d'autre dans ces fichiers ;
@@ -114,14 +128,13 @@ Dans cet ordre, uniquement ce qui a été accepté.
 
 # 5. Commiter
 
-Propose un commit de ces seuls changements, sur la branche courante, dans le style du dépôt. Laisse en dehors toute modification qui existait avant l'init, sauf en migration : les tickets et la configuration déplacés partent entiers, avec leurs modifications non commitées. Dis-le au développeur avant de commiter. Ne pousse jamais. Si le développeur préfère commiter lui-même, donne-lui la liste des fichiers.
+Propose un commit de ces seuls changements, sur la branche courante, dans le style du dépôt. Laisse en dehors toute modification qui existait avant l'init. Ne pousse jamais. Si le développeur préfère commiter lui-même, donne-lui la liste des fichiers.
 
 # 6. Rendre compte
 
 En six lignes au plus :
-- la migration, si elle a eu lieu, et le nombre de références mises à jour ;
 - la configuration retenue ;
 - les dossiers renommés et le nombre de références mises à jour (ou la note ajoutée) ;
 - ce qui a été ajouté à `CLAUDE.md` et ce qui a été supprimé, ainsi que les réglages ajoutés ;
 - les tickets créés, s'il y en a ;
-- la suite : si tu as ajouté `agent`, redémarrer Claude Code pour qu'il s'applique ; `/reload-plugins` si tu as modifié des skills du projet ; si `docs_dir` a changé alors que la micro-app tourne, la relancer, car elle ne lit cette clé qu'au démarrage ; puis `/ork:ticket` ou une story pour commencer.
+- la suite : si tu as ajouté `outputStyle`, ouvrir une nouvelle session sans worktree ; si `docs_dir` a changé alors que la micro-app tourne, la relancer, car elle ne lit cette clé qu'au démarrage ; puis une remarque ou une story pour commencer. La micro-app reste facultative : `/ork:ui` si le développeur veut le kanban.

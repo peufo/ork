@@ -130,7 +130,7 @@ const (
 	statusOther = "other"
 )
 
-// statusOrder is the ticket cycle from agents/lead.md, in board order.
+// statusOrder is the ticket cycle from skills/ticket, in board order.
 var statusOrder = []string{"idea", "ready", "planning", "plan-review", "in-progress", "blocked", "in-review", statusDone}
 
 // attentionStatuses wait for the developer, with the status line's icons.
