@@ -1,0 +1,31 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - errorlint
+    - exhaustive
+    - gosec
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    gosec:
+      excludes:
+        # Paths come from docStore.resolve, which confines them to doc/, or from
+        # the git common dir.
+        - G304
+        # Fixed commands (git, open, xdg-open, this binary).
+        - G204
+  exclusions:
+    rules:
+      # Tests build fixture trees with ordinary permissions.
+      - path: _test\.go
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofmt

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ork</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#/board"><strong>ork</strong> <span data-el="project"></span></a>
+  <nav class="tabs" aria-label="Vues">
+    <a data-el="navBoard" href="#/board">Tickets</a>
+    <a data-el="navDocs" href="#/doc">Documents</a>
+  </nav>
+  <p class="summary" data-el="summary" aria-live="polite"></p>
+  <p class="offline" data-el="offline" role="status" hidden>Serveur arrêté : relance <code>/ork:ui</code></p>
+</header>
+
+<main class="view-board" data-el="viewBoard" hidden>
+  <div class="board" data-el="board"></div>
+</main>
+
+<main class="view-docs" data-el="viewDocs" hidden>
+  <details class="tree-panel" data-el="treePanel" open>
+    <summary>Fichiers</summary>
+    <input class="tree-filter" data-el="filter" name="filter" type="search" placeholder="Filtrer par nom" aria-label="Filtrer les fichiers par nom">
+    <nav class="tree" data-el="tree" aria-label="Fichiers de doc/"></nav>
+  </details>
+  <article class="doc" data-el="doc"></article>
+</main>
+</body>
+</html>

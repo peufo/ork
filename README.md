@@ -14,6 +14,8 @@ Un plugin Claude Code pour travailler avec **une seule session principale** qui 
 | `skills/ideation` | Idéation sur une story : chargé par le chef dès qu'on discute d'une fonctionnalité, ou par `/ork:ideation`. Il challenge les idées sous plusieurs angles et fait des contre-propositions quand elles sont meilleures. |
 | `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. |
 | `skills/status` | `/ork:status` : état de tous les tickets, au démarrage d'une session comme en cours de journée, et livraison des notifications différées. |
+| `skills/ui` | `/ork:ui` : ouvre la micro-app, un kanban des tickets et un lecteur des Markdown de `doc/`, en lecture seule. |
+| `app/`, `scripts/ork-app.sh` | Le code de la micro-app (un binaire Go) et le lanceur qui télécharge le binaire au premier usage. |
 
 Rien de tout ça ne va dans le dépôt du client. Dans le dépôt, il n'y a que des **données** en Markdown :
 
@@ -131,9 +133,33 @@ idea → ready → (planning → plan-review →) in-progress → in-review → 
 
 Un ouvrier qui rencontre une décision qui ne lui appartient pas **s'arrête** et rend `STATUS: BLOCKED` avec 2 ou 3 options et une recommandation. Un sous-agent ne peut pas te poser de question directement, c'est pour ça que ce protocole existe. Le chef te pose la question, puis relance le **même** ouvrier avec ta réponse. Celui-ci reprend avec tout son historique.
 
-## Vue visuelle dans Obsidian
+## La micro-app
 
-Chaque ticket a son statut en frontmatter, donc tu peux ouvrir `doc/` comme coffre Obsidian et afficher les tickets regroupés par `status`, par exemple avec une vue *Bases* ou un plugin de tableau qui lit les propriétés. Je n'ai pas testé de configuration précise : à ajuster selon ce que tu utilises.
+`/ork:ui` ouvre dans ton navigateur une page locale, propre au dépôt :
+
+- **Tickets** : un kanban, une colonne par statut. Il se met à jour tout seul quand le chef écrit un ticket, et une carte qui vient de changer de colonne se signale brièvement. `blocked`, `plan-review` et `in-review` ressortent : ce sont eux qui t'attendent.
+- **Documents** : tous les Markdown de `doc/`, avec leurs liens, et les captures d'écran citées dans les tickets.
+
+Elle ne fait que lire : elle n'a aucune route d'écriture, et le chef reste le seul à écrire dans `doc/tickets/`. Elle écoute seulement sur `127.0.0.1`.
+
+**Rien à installer.** Au premier usage d'une version d'ork, `scripts/ork-app.sh` télécharge le binaire de ta plateforme (macOS ou Linux, arm64 ou amd64) depuis les releases GitHub, vérifie sa somme de contrôle et le garde dans `~/.cache/ork/`. Cette somme vit dans la même release : elle protège d'un téléchargement corrompu, pas d'une release compromise. Le serveur tourne en arrière-plan, et ses seules traces dans le projet sont `ork-app.json` et `ork-app.log` dans le dossier `.git`.
+
+Hors de Claude Code, depuis le dépôt d'un projet :
+
+```bash
+alias ork-ui='sh ~/.claude/skills/ork/scripts/ork-app.sh --detach --open'
+sh ~/.claude/skills/ork/scripts/ork-app.sh --stop    # pour l'arrêter
+```
+
+**Pour modifier la micro-app** (il faut Go et `golangci-lint`), depuis `app/` :
+
+```bash
+golangci-lint run && go test -race ./...
+go build -o /tmp/ork-app .
+ORK_APP_BIN=/tmp/ork-app sh ../scripts/ork-app.sh --repo <projet> --open
+```
+
+**Pour publier une version** : passe `version` à la nouvelle valeur dans `.claude-plugin/plugin.json`, commite, puis pousse le tag `v<version>` correspondant. Le workflow `release.yml` vérifie le tout et publie les binaires. Entre le commit et la fin du workflow, `/ork:ui` ne trouve pas encore le binaire et le dit.
 
 ## Ce qu'il faut savoir (vérifié dans la doc Claude Code)
 
