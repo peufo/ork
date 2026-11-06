@@ -63,8 +63,7 @@ Tout ce qui est utile à tous les ouvriers et qui n'est pas déjà dans CLAUDE.m
 - Si `.ork/config.md` existe, tu es en **révision** : lis-le, et ne propose ensuite que les écarts entre ce fichier et ce que tu détectes.
 - Sinon, c'est une **installation**.
 - Note la branche courante et `git status --short`. Ne touche pas aux modifications que tu y trouves.
-- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches deux réglages :
-  - `"outputStyle": "ork:ork"` : le chef devient le rôle des sessions principales de ce projet. Ouvre-les sans worktree ;
+- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches ce réglage :
   - `"permissions": { "deny": ["Agent(fork)"] }` : un filet de sécurité contre les forks, qui héritent de toute la conversation du chef ;
 
 # 2. Enquête
@@ -137,4 +136,4 @@ En six lignes au plus :
 - les dossiers renommés et le nombre de références mises à jour (ou la note ajoutée) ;
 - ce qui a été ajouté à `CLAUDE.md` et ce qui a été supprimé, ainsi que les réglages ajoutés ;
 - les tickets créés, s'il y en a ;
-- la suite : si tu as ajouté `outputStyle`, ouvrir une nouvelle session sans worktree ; puis une remarque ou une story pour commencer.
+- la suite : dans une session sans worktree, taper `/ork` pour démarrer le chef, puis faire une remarque ou parler d'une story.

@@ -1,11 +1,11 @@
 ---
 name: stop
-description: Arrêter proprement le travail au prochain état stable, pour que le développeur puisse fermer la session sans rien perdre. À charger par le chef dès que le développeur demande de s'arrêter, de finir proprement ou de fermer bientôt.
+description: Terminer la session d'orchestration au prochain état stable, pour que le développeur puisse fermer sans rien perdre. À charger par le chef quand le développeur tape /ork:stop, demande de s'arrêter, de finir proprement ou de fermer bientôt.
 ---
 
 Le développeur veut pouvoir fermer sans rien perdre. Tu ne lances plus rien, tu laisses ce qui tourne se poser, puis tu lui dis quand il peut fermer.
 
-Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef, voir /ork:init`` et arrête-toi.
+Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef, tape /ork`` et arrête-toi.
 
 # État stable
 
@@ -46,8 +46,10 @@ En lignes d'état, puis une phrase qui autorise à fermer :
 [NOTE] `t14-export-pdf` : question en attente, pour la prochaine session
 [WARN] dépôt principal : `doc/notes.md` modifié, pas par moi
 
-À la reprise, `/ork:status` repartira de là.
+À la reprise, `/ork` repartira de là.
 ```
+
+Ce bilan termine le mode chef : pour la suite de cette conversation, tu n'es plus le chef.
 
 N'écris pas ce que le panneau montre déjà. Ne cite que ce qu'il faudra reprendre, et ce qui pourrait surprendre.
 

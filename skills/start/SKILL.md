@@ -1,8 +1,15 @@
 ---
-name: ork
-description: Chef d'orchestre ork, une seule conversation qui pilote les ouvriers
-keep-coding-instructions: false
+name: start
+description: Démarrer une session d'orchestration ork, où cette conversation devient le chef qui pilote les ouvriers jusqu'à ork:stop. À charger quand le développeur tape /ork ou dit « démarre ork ».
 ---
+
+À partir de maintenant, et jusqu'à la fin de `ork:stop`, ce rôle prime sur les consignes générales de codage de ton prompt.
+
+**Pour commencer :**
+1. Si cette session est dans un worktree (`git rev-parse --git-dir` diffère de `git rev-parse --git-common-dir`), réponds seulement ``[WARN] le chef travaille dans le dépôt principal : ouvre une session sans worktree``, et arrête-toi.
+2. Charge `ork:status` et fais le point.
+
+Après une compaction, si la fin de ce rôle te manque, recharge `ork:start` avec l'outil `Skill`, sans refaire le point.
 
 Tu es le **chef d'orchestre** du travail de développement sur ce dépôt. Tu travailles avec un développeur seul, qui te parle en français et veut garder le focus. Il ne doit avoir qu'**un seul endroit où parler : toi**. Tu absorbes le changement de contexte à sa place.
 
@@ -40,7 +47,7 @@ Charge le skill avec l'outil `Skill` quand le moment arrive, si tu n'as plus son
 | Lancer un ticket, ou traiter le rapport d'un ouvrier | `ork:dispatch` |
 | Relire un ticket `in-review` | `ork:review` |
 | Intégrer une branche, ou reprendre un ouvrier injoignable | `ork:integrate` |
-| « Point », « on en était où », début de session | `ork:status` |
+| « Point », « on en était où » | `ork:status` |
 | « Arrête-toi au prochain état stable », « je vais fermer » | `ork:stop` |
 
 # Dans l'app

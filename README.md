@@ -12,9 +12,9 @@ ork ne refait pas ce que l'app sait déjà faire (terminal, navigateur, fichiers
 
 | Pièce | Rôle |
 |---|---|
-| `output-styles/ork.md` | Le rôle du chef. Il s'ajoute au prompt par défaut de Claude Code, sans le remplacer. |
 | `agents/worker.md` | L'ouvrier : exécute un ticket dans un worktree isolé, tient ce ticket à jour et rend un rapport très court. |
 | `agents/critic.md` | Le contre-lecteur : relit une story à froid et rend trois objections au plus. |
+| `skills/start` | Le rôle du chef, chargé par `/ork` pour la session en cours. |
 | `skills/` | Les procédures, chargées à la demande : `init`, `status`, `ticket`, `ideation`, `dispatch`, `review`, `integrate`, `stop`. |
 | `hooks/` | Le mod d'affichage : badges, carte de sujet, boutons et panneau d'état. |
 
@@ -45,20 +45,17 @@ ln -s "$PWD" ~/.claude/skills/ork
 
 ## Démarrer dans un projet
 
-1. Ouvre une session de l'app sur le dossier du projet, puis tape `/ork:init`. Il détecte les commandes et la branche, puis propose `.ork/config.md` et le réglage du chef.
-2. Accepte le réglage, écrit dans `.claude/settings.local.json` :
-   ```json
-   { "outputStyle": "ork:ork", "permissions": { "deny": ["Agent(fork)"] } }
-   ```
-3. Ouvre une nouvelle session **sans worktree**. Le chef écrit dans `.ork/tickets/` et intègre dans le dépôt principal : il doit y travailler directement.
+1. Ouvre une session de l'app sur le dossier du projet, puis tape `/ork:init`. Il détecte les commandes et la branche, puis propose `.ork/config.md`.
+2. Dans une session **sans worktree**, tape `/ork`. Le panneau s'ouvre, cette conversation devient le chef et elle fait le point. Le chef écrit dans `.ork/tickets/` et intègre dans le dépôt principal : il doit y travailler directement.
+3. Pour finir, tape `/ork:stop`. Le chef laisse tout se poser, te dit quand fermer, et la conversation redevient normale.
 
-Les ouvriers et le contre-lecteur gardent leur propre prompt. En revanche, toutes les sessions principales de ce projet deviennent le chef tant que ce réglage est posé.
+Rien n'est réglé au niveau du dépôt : les autres sessions du projet restent des sessions normales. Les ouvriers et le contre-lecteur gardent leur propre prompt.
 
 Pour le mode de permission, le mode **Auto** évite que chaque commande d'un ouvrier te demande une approbation.
 
 ## Une journée type
 
-- **Le matin** : `/ork:status` signale les ouvriers arrêtés et les worktrees à surveiller, puis présente un seul sujet. Le panneau montre le reste.
+- **Le matin** : `/ork` signale les ouvriers arrêtés et les worktrees à surveiller, puis présente un seul sujet. Le panneau montre le reste.
 - **Tu remarques un truc** : écris-le, avec une capture si tu veux. Tu reçois une ligne en retour et tu retournes à ce que tu faisais.
 - **Idéation** : tu parles normalement d'une story. Le chef l'écrit dans `<docs_dir>/story/`, propose un découpage et crée les tickets après ton accord.
 - **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones`, `depends_on` et `max_parallel`.
@@ -68,7 +65,7 @@ Pour le mode de permission, le mode **Auto** évite que chaque commande d'un ouv
 - **Note de confiance** : chaque point de relecture et chaque recommandation d'un ouvrier porte une note sur 10. `confidence_threshold: 8` laisse passer ce qui atteint 8, signalé par `[AUTO]`. Absent : tu vois tout. Les plans, `review: required` et `## Ask before` passent toujours par toi.
 - **Relecture guidée** : « relisons t12 » place le dépôt principal sur une branche `review/t12` et ouvre le panneau de modifications de l'app, puis donne une vue d'ensemble triée par note et chaque point à relire. Une seule relecture à la fois : rien ne se pose sur la branche d'intégration avant la fin de celle-ci.
 - **Intégration** : « intègre t12 » rebase la branche et la vérifie dans son worktree, la pose par avance rapide, puis archive le ticket et supprime le worktree.
-- **Le soir, ou avant de fermer** : dis « arrête-toi au prochain état stable », ou clique sur `Arrêt propre` dans le panneau. Le chef ne lance plus rien, les ouvriers commitent sur leur branche et rendent la main, puis il te dit que tu peux fermer et ce qu'il faudra reprendre. Ce qui n'est pas intégré attend sur sa branche.
+- **Le soir, ou avant de fermer** : tape `/ork:stop`, dis « arrête-toi au prochain état stable », ou clique sur `Arrêt propre` dans le panneau. Le chef ne lance plus rien, les ouvriers commitent sur leur branche et rendent la main, puis il te dit que tu peux fermer et ce qu'il faudra reprendre. Ce qui n'est pas intégré attend sur sa branche.
 - **Conventions du projet** : ce qui est propre au projet va dans `CLAUDE.md`, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés, vérifications, style de commit.
 
 ## Le cycle d'un ticket
@@ -86,7 +83,7 @@ Le chef écrit du texte au même format, et le mod l'affiche sans modifier le me
 
 - les lignes `[TAG]` deviennent des badges colorés ;
 - un sujet devient une carte, avec son lien, son étape et ses réponses en boutons. Une fois ta réponse envoyée, les boutons disparaissent, pour qu'un clic tardif ne réponde pas au mauvais sujet ;
-- un panneau latéral montre en permanence ce qui t'attend, ce qui tourne, ce qui est prêt et les idées, avec un bouton par ticket, le ticket du sujet en cours marqué d'un point, et un loader par agent au travail, avec ce qu'il fait. Le chef n'a donc plus à répéter cet état. Il s'ouvre au démarrage dans un projet ork, et `/ork` le rouvre.
+- un panneau latéral montre en permanence ce qui t'attend, ce qui tourne, ce qui est prêt et les idées, avec un bouton par ticket, le ticket du sujet en cours marqué d'un point, et un loader par agent au travail, avec ce qu'il fait. Le chef n'a donc plus à répéter cet état. `/ork` l'ouvre.
 
 Si le mod ne reconnaît pas un texte, ou s'il cesse de fonctionner, le texte s'affiche normalement. Son API est en accès anticipé et peut changer d'une version de Claude Code à l'autre.
 
@@ -102,6 +99,7 @@ claude plugin validate . && claude plugin test .
 
 ## Ce qu'il faut savoir
 
+- **Le rôle du chef vit dans la conversation.** Il s'ajoute au prompt par défaut, consignes de codage comprises. Une compaction peut couper la fin du skill : le chef le recharge alors, et `/ork` le relance en cas de doute.
 - **Le chef n'a pas de verrou** : « je ne lis jamais de code » est une consigne. Si tu lui demandes de modifier une ligne, il le fait et te signale la règle contournée.
 - **Seul le dernier message d'un tour s'affiche tel quel.** L'app résume le texte écrit avant un appel d'outil, c'est pourquoi le chef écrit ses lignes d'état à la fin du tour.
 - **Le worktree d'un ouvrier part de la branche par défaut du dépôt.** L'ouvrier s'aligne d'abord sur `integration_branch`, et seul ce qui y est **commité** lui parvient.

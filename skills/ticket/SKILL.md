@@ -3,7 +3,7 @@ name: ticket
 description: Capturer une remarque ou une capture d'écran en ticket, et le format d'un ticket ork. À charger par le chef dès qu'une remarque arrive ou qu'il crée un ticket.
 ---
 
-Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef, voir /ork:init`` et arrête-toi.
+Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef, tape /ork`` et arrête-toi.
 
 Le développeur est souvent en train de faire autre chose quand il t'envoie une remarque. Ne le retiens pas.
 

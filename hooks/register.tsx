@@ -13,6 +13,8 @@ const PANE = 'ork'
 const CONFIG = '.ork/config.md'
 const TICKETS_DIR = '.ork/tickets'
 const STOP_FILE = `${TICKETS_DIR}/.stop`
+const START_SKILL = 'ork:start'
+const START_PROMPT = 'démarre ork'
 const STOP_PROMPT = 'arrête-toi au prochain état stable'
 
 const boardAtom = atom({ plugin: 'ork', key: 'board' } as const, null)
@@ -71,6 +73,18 @@ async function refreshBoard($: EngineInterface): Promise<void> {
   )
 
   await update($, boardAtom, () => board)
+}
+
+async function openPanel($: EngineInterface): Promise<boolean> {
+  await refreshBoard($)
+
+  if ((await read($, boardAtom)) === null) {
+    return false
+  }
+
+  await $.ui.open({ id: PANE, title: 'ork' })
+
+  return true
 }
 
 async function findAgent(
@@ -138,27 +152,23 @@ export const register: Register = on => {
 
     await $.command.register({
       name: 'ork',
-      description: "Ouvrir le panneau d'état d'ork",
+      description: "Démarrer le chef d'ork dans cette session et ouvrir son panneau",
     })
-    await refreshBoard($)
-
-    if ((await read($, boardAtom)) !== null) {
-      void $.ui.open({ id: PANE, title: 'ork' })
-    }
 
     return started
   })
 
   on('command.run', { command: 'ork' }, async $ => {
-    await refreshBoard($)
-
-    if ((await read($, boardAtom)) === null) {
+    if (!(await openPanel($))) {
       return { text: "Ce dépôt n'a pas de .ork/config.md : lance /ork:init." }
     }
 
-    await $.ui.open({ id: PANE, title: 'ork' })
+    // A command's hook cannot submit a prompt: it would wait on its own turn.
+    $.clock.after(0, () => {
+      void $.prompt.submit({ text: START_PROMPT, asUser: true })
+    })
 
-    return { text: "Panneau d'état ouvert." }
+    return { text: "Panneau d'ork ouvert." }
   })
 
   on('agent.spawn', async ($, e, next) => {
@@ -217,6 +227,10 @@ export const register: Register = on => {
 
   on('prompt.submit', async ($, e, next) => {
     await retireButtons($)
+
+    if (e.command?.name === START_SKILL) {
+      await openPanel($)
+    }
 
     return next(e)
   }).catch(($, e, next) => next(e))

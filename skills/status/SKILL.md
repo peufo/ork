@@ -3,7 +3,7 @@ name: status
 description: Faire le point sur les tickets ouverts, au démarrage d'une session comme en cours de journée.
 ---
 
-Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef, voir /ork:init`` et arrête-toi.
+Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef, tape /ork`` et arrête-toi.
 
 Le développeur veut savoir où on en est : au démarrage d'une session, ou en cours de journée.
 

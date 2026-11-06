@@ -1,4 +1,5 @@
 import { expect, test } from 'claude-code/testing'
+import type { TestBody } from 'claude-code/testing'
 
 const TEXT = [
   '[OK] `t12-a` -> `main`',
@@ -151,4 +152,68 @@ test('the panel says when a clean stop is under way, and hides its button', asyn
   expect(await ui.find({ type: 'Text', text: /Arrêt propre en cours/ })).toBeDefined()
   expect(await ui.find({ key: 'stop' })).toBeUndefined()
   await ui.unmount()
+})
+
+const orkEngine = (on: Parameters<TestBody>[1]) => {
+  const opened: string[] = []
+  let answer: (text: string) => void = () => {}
+  const submitted = new Promise<string>(resolve => {
+    answer = resolve
+  })
+  const state = new Map<string, unknown>()
+  let version = 0
+  on('command.register', () => ({ value: { command: 'ork' } }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('fs.exists', () => ({ value: true }))
+  on('fs.list', () => ({ value: [] }))
+  on('state.get', (_, e) => ({ value: { value: state.get(e.key) ?? null, version } }))
+  on('state.set', (_, e) => {
+    state.set(e.key, e.value)
+    version += 1
+    return { value: { isSet: true, version } }
+  })
+  on('clock.after', () => ({ value: undefined }))
+  on('ui.open', (_, e) => {
+    opened.push(e.id)
+    return { value: { isPlaced: true } }
+  })
+  on('prompt.submit', (_, e) => {
+    answer(e.text)
+    return { text: e.text }
+  })
+
+  return { opened, submitted }
+}
+
+test('a new session stays normal: the panel waits for /ork', async ($, on) => {
+  const { opened } = orkEngine(on)
+
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  expect(opened).toEqual([])
+})
+
+test('/ork opens the panel, then starts the lead once the command is over', async ($, on) => {
+  const { opened, submitted } = orkEngine(on)
+
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  await $.command.run({
+    command: 'ork',
+    args: '',
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 80 },
+  })
+  expect(opened).toEqual(['ork'])
+  expect(await submitted).toBe('démarre ork')
+})
+
+test('/ork:start also opens the panel', async ($, on) => {
+  const { opened } = orkEngine(on)
+
+  await $.prompt.submit({
+    text: '/ork:start',
+    command: { name: 'ork:start', args: '' },
+    wait: false,
+    origin: { kind: 'composer' },
+  })
+  expect(opened).toEqual(['ork'])
 })
