@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"log"
 	"os"
@@ -15,7 +16,7 @@ import (
 
 const watchDebounce = 150 * time.Millisecond
 
-// hub tells every open page that doc/ changed.
+// hub tells every open page that the documents changed.
 type hub struct {
 	mu          sync.Mutex
 	subscribers map[chan struct{}]struct{}
@@ -63,16 +64,26 @@ func (h *hub) close() {
 	h.closeOnce.Do(func() { close(h.closed) })
 }
 
-// watchDocs watches doc/ until ctx ends. fsnotify is not recursive, so each
-// directory is added, including the ones that appear later.
-func watchDocs(ctx context.Context, root string, h *hub) error {
+// watchDocs watches the given folders until ctx ends. fsnotify is not recursive,
+// so each directory is added, including the ones that appear later. A folder that
+// does not exist yet is awaited from its parent: a project's first story creates
+// doc/ while the app is open.
+func watchDocs(ctx context.Context, roots []string, h *hub) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
-	if err := addDirs(watcher, root); err != nil {
-		_ = watcher.Close()
-		return err
+	for _, root := range roots {
+		if _, err := os.Stat(root); errors.Is(err, fs.ErrNotExist) {
+			if err := watcher.Add(filepath.Dir(root)); err != nil {
+				log.Printf("%s ne sera pas surveillé : %v", root, err)
+			}
+			continue
+		}
+		if err := addDirs(watcher, root); err != nil {
+			_ = watcher.Close()
+			return err
+		}
 	}
 	go func() {
 		defer func() { _ = watcher.Close() }()
@@ -85,7 +96,7 @@ func watchDocs(ctx context.Context, root string, h *hub) error {
 				if !ok {
 					return
 				}
-				if strings.HasPrefix(filepath.Base(event.Name), ".") {
+				if strings.HasPrefix(filepath.Base(event.Name), ".") || !isWithin(roots, event.Name) {
 					continue
 				}
 				if event.Has(fsnotify.Create) {
@@ -102,7 +113,7 @@ func watchDocs(ctx context.Context, root string, h *hub) error {
 				if !ok {
 					return
 				}
-				log.Printf("surveillance de doc/ : %v", err)
+				log.Printf("surveillance des documents : %v", err)
 			case <-debounce:
 				debounce = nil
 				h.broadcast()
@@ -110,6 +121,16 @@ func watchDocs(ctx context.Context, root string, h *hub) error {
 		}
 	}()
 	return nil
+}
+
+// isWithin ignores what a watched parent reports about its other children.
+func isWithin(roots []string, name string) bool {
+	for _, root := range roots {
+		if name == root || strings.HasPrefix(name, root+string(filepath.Separator)) {
+			return true
+		}
+	}
+	return false
 }
 
 func addDirs(watcher *fsnotify.Watcher, root string) error {

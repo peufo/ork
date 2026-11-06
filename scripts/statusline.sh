@@ -1,6 +1,6 @@
 #!/bin/sh
 # Status line Claude Code : ce qui attend le développeur dans les tickets ork.
-# N'affiche rien hors d'un dépôt qui contient doc/ork.md.
+# N'affiche rien hors d'un dépôt qui contient .ork/config.md.
 
 dir=$(jq -r '.workspace.current_dir // .cwd // empty' 2>/dev/null)
 [ -n "$dir" ] || exit 0
@@ -8,10 +8,13 @@ dir=$(jq -r '.workspace.current_dir // .cwd // empty' 2>/dev/null)
 # Dépôt principal, même depuis un worktree d'ouvrier : les tickets n'y vivent que là.
 common=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
 repo=$(dirname "$common")
-[ -f "$repo/doc/ork.md" ] || exit 0
+if [ ! -f "$repo/.ork/config.md" ]; then
+  [ -f "$repo/doc/ork.md" ] && printf 'ork · lance /ork:init pour migrer vers .ork/\n'
+  exit 0
+fi
 
 blocked="" plan="" review=0 running=0
-for f in "$repo"/doc/tickets/*.md; do
+for f in "$repo"/.ork/tickets/*.md; do
   [ -f "$f" ] || continue
   set -- $(awk '
     NR == 1 && $0 != "---" { exit }

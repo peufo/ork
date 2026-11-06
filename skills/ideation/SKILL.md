@@ -23,7 +23,7 @@ Passe chaque idée à travers ces angles. Tu n'as pas à les citer tous : ne rem
 2. **La plus petite version :** quelle partie apporte l'essentiel de la valeur ? Qu'est-ce qui peut attendre un deuxième temps ?
 3. **Le coût réel :** ce que ça touche dans le code, les migrations, le contrat, les tests. Ne l'estime pas de tête : demande à `ork:scout`.
 4. **Les risques :** cas limites, données existantes, sécurité, ce qui casse si ça échoue à moitié.
-5. **La cohérence :** avec les stories, les specs et les décisions déjà prises dans le dépôt (cherche un journal de décisions dans `doc/`). Une contradiction se signale, même si la nouvelle idée est meilleure.
+5. **La cohérence :** avec les stories, les specs et les décisions déjà prises dans le dépôt (cherche un journal de décisions dans le dossier `docs_dir` de `.ork/config.md`, `doc/` par défaut). Une contradiction se signale, même si la nouvelle idée est meilleure.
 6. **La réversibilité :** une décision facile à défaire peut se prendre vite ; une décision coûteuse à défaire (modèle de données, contrat public) mérite qu'on s'y arrête.
 7. **Les alternatives :** une autre façon d'obtenir le même résultat, y compris ne rien faire ou réutiliser l'existant.
 

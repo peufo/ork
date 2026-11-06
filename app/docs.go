@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 	"unicode"
 )
 
-var errOutsideDoc = errors.New("chemin hors de doc/")
+var errOutsideStore = errors.New("chemin hors de .ork/ et du dossier de documents")
 
 // imageTypes lists the only non-Markdown files the app serves.
 var imageTypes = map[string]string{
@@ -23,45 +24,83 @@ var imageTypes = map[string]string{
 	".svg":  "image/svg+xml",
 }
 
-// docStore gives confined access to the doc/ directory.
+// docStore gives confined access to the project's documents folder and to .ork/.
+// Paths are slash-separated and relative to the repository root, like the ones
+// the lead writes in tickets: doc/story/a.md, .ork/tickets/t1-a.md.
 type docStore struct {
-	root string
+	root   string
+	mounts []string
 }
 
-func newDocStore(dir string) (*docStore, error) {
-	root, err := filepath.EvalSymlinks(dir)
+func newDocStore(root, docsDir string) (*docStore, error) {
+	resolved, err := filepath.EvalSymlinks(root)
 	if err != nil {
 		return nil, err
 	}
-	return &docStore{root: root}, nil
+	return &docStore{root: resolved, mounts: []string{docsDir, orkDir}}, nil
 }
 
-// resolve turns a slash-separated path relative to doc/ into an absolute path.
-// It refuses hidden segments, `..` and symlinks that lead out of doc/.
-func (d *docStore) resolve(rel string) (string, error) {
-	if rel == "" || !filepath.IsLocal(filepath.FromSlash(rel)) || strings.Contains(rel, "\\") {
-		return "", errOutsideDoc
+// roots returns the absolute folders to watch. One of them may not exist yet.
+func (d *docStore) roots() []string {
+	roots := make([]string, 0, len(d.mounts))
+	for _, mount := range d.mounts {
+		abs := filepath.Join(d.root, filepath.FromSlash(mount))
+		if resolved, err := filepath.EvalSymlinks(abs); err == nil {
+			abs = resolved
+		}
+		roots = append(roots, abs)
 	}
-	if path.Clean(rel) != rel {
-		return "", errOutsideDoc
-	}
-	for _, segment := range strings.Split(rel, "/") {
-		if strings.HasPrefix(segment, ".") {
-			return "", errOutsideDoc
+	return roots
+}
+
+// mountOf splits rel into its mount and what follows it.
+func (d *docStore) mountOf(rel string) (mount, inner string, ok bool) {
+	for _, mount := range d.mounts {
+		if rel == mount {
+			return mount, "", true
+		}
+		if inner, found := strings.CutPrefix(rel, mount+"/"); found {
+			return mount, inner, true
 		}
 	}
-	abs, err := filepath.EvalSymlinks(filepath.Join(d.root, filepath.FromSlash(rel)))
+	return "", "", false
+}
+
+// resolve turns a slash-separated path into an absolute one. It refuses what is
+// outside the mounts, hidden segments inside them, `..` and symlinks that lead
+// out of their mount.
+func (d *docStore) resolve(rel string) (string, error) {
+	if rel == "" || !filepath.IsLocal(filepath.FromSlash(rel)) || strings.Contains(rel, "\\") {
+		return "", errOutsideStore
+	}
+	if path.Clean(rel) != rel {
+		return "", errOutsideStore
+	}
+	mount, inner, ok := d.mountOf(rel)
+	if !ok {
+		return "", errOutsideStore
+	}
+	for _, segment := range strings.Split(inner, "/") {
+		if strings.HasPrefix(segment, ".") {
+			return "", errOutsideStore
+		}
+	}
+	mountRoot, err := filepath.EvalSymlinks(filepath.Join(d.root, filepath.FromSlash(mount)))
 	if err != nil {
 		return "", err
 	}
-	inside, err := filepath.Rel(d.root, abs)
+	abs, err := filepath.EvalSymlinks(filepath.Join(mountRoot, filepath.FromSlash(inner)))
+	if err != nil {
+		return "", err
+	}
+	inside, err := filepath.Rel(mountRoot, abs)
 	if err != nil || !filepath.IsLocal(inside) {
-		return "", errOutsideDoc
+		return "", errOutsideStore
 	}
 	return abs, nil
 }
 
-// isFile reports whether rel is a regular file inside doc/.
+// isFile reports whether rel is a regular file inside a mount.
 func (d *docStore) isFile(rel string) bool {
 	abs, err := d.resolve(rel)
 	if err != nil {
@@ -87,10 +126,24 @@ type treeNode struct {
 	Children []*treeNode `json:"children,omitempty"`
 }
 
-// tree lists the Markdown files of doc/. Directories without any Markdown are
-// left out, and symlinked directories are not followed.
+// tree lists the Markdown files of each mount. Directories without any Markdown
+// are left out, and symlinked directories are not followed.
 func (d *docStore) tree() (*treeNode, error) {
-	return d.walk("")
+	top := &treeNode{Dir: true}
+	for _, mount := range d.mounts {
+		sub, err := d.walk(mount)
+		if errors.Is(err, fs.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(sub.Children) > 0 {
+			sub.Name = mount
+			top.Children = append(top.Children, sub)
+		}
+	}
+	return top, nil
 }
 
 func (d *docStore) walk(rel string) (*treeNode, error) {

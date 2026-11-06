@@ -52,7 +52,7 @@ func newPolicy() *bluemonday.Policy {
 	return policy
 }
 
-// render returns the safe HTML of a Markdown body located at rel inside doc/.
+// render returns the safe HTML of a Markdown body located at rel in the store.
 func (r *renderer) render(rel, body string) (string, error) {
 	source := []byte(body)
 	ctx := parser.NewContext(parser.WithIDs(newHeadingIDs()))
@@ -93,8 +93,8 @@ func (r *renderer) rewriteLinks(document ast.Node, rel string) {
 }
 
 // linkCitedPaths makes a code span clickable when it names a document or an image
-// of doc/: the lead cites stories and screenshots as `doc/tickets/captures/x.png`,
-// not as Markdown links.
+// of the store: the lead cites stories and screenshots as
+// `.ork/tickets/captures/x.png`, not as Markdown links.
 func (r *renderer) linkCitedPaths(document ast.Node, source []byte, rel string) {
 	var spans []*ast.CodeSpan
 	_ = ast.Walk(document, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -153,8 +153,8 @@ func unwrap(n ast.Node) {
 var urlScheme = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+.-]*:`)
 
 // linkTarget maps a destination found in the document at rel to what the page
-// can open. ok=false means the target is out of reach (a file outside doc/, a
-// missing one, an unknown scheme) and only the text should remain.
+// can open. ok=false means the target is out of reach (a file outside the store,
+// a missing one, an unknown scheme) and only the text should remain.
 func (r *renderer) linkTarget(dest, rel string, image bool) (string, bool) {
 	dest = strings.TrimSpace(dest)
 	switch {
@@ -181,17 +181,12 @@ func (r *renderer) linkTarget(dest, rel string, image bool) (string, bool) {
 	return "", false
 }
 
-// locate finds a link's file inside doc/. The lead writes links from the
-// repository root (doc/tickets/t1.md); people write them relative to the file.
+// locate finds a link's file in the store. The lead writes links from the
+// repository root (.ork/tickets/t1.md); people write them relative to the file.
 func (r *renderer) locate(target, rel string) (string, bool) {
-	var candidates []string
-	if rooted, isRooted := strings.CutPrefix(path.Clean("/"+target), "/doc/"); isRooted {
-		candidates = append(candidates, rooted)
-	}
+	candidates := []string{strings.TrimPrefix(path.Clean("/"+target), "/")}
 	if !strings.HasPrefix(target, "/") {
-		if inDoc, isInDoc := strings.CutPrefix(path.Join("doc", path.Dir(rel), target), "doc/"); isInDoc {
-			candidates = append(candidates, inDoc)
-		}
+		candidates = append(candidates, path.Join(path.Dir(rel), target))
 	}
 	for _, candidate := range candidates {
 		if r.store.isFile(candidate) {

@@ -1,6 +1,6 @@
 ---
 name: ui
-description: Ouvrir la micro-app ork, qui affiche les tickets en kanban et les Markdown de doc/ en lecture seule.
+description: Ouvrir la micro-app ork, qui affiche les tickets en kanban et les documents du projet en lecture seule.
 disable-model-invocation: true
 ---
 

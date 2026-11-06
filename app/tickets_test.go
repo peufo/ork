@@ -100,11 +100,11 @@ func hasColumn(b board, status string) bool {
 
 func TestBuildBoardNeverHidesATicket(t *testing.T) {
 	tickets := []ticket{
-		newTicket("tickets/t1-a.md", "---\nid: t1\nstatus: ready\n---\n", false),
-		newTicket("tickets/t2-b.md", "---\nid: t2\nstatus: wat\n---\n", false),
-		newTicket("tickets/t3-c.md", "no frontmatter at all", false),
-		newTicket("tickets/notes.md", "---\ntitle: Sans id\n---\n", false),
-		newTicket("tickets/done/t4-d.md", "---\nid: t4\nstatus: in-review\n---\n", true),
+		newTicket(".ork/tickets/t1-a.md", "---\nid: t1\nstatus: ready\n---\n", false),
+		newTicket(".ork/tickets/t2-b.md", "---\nid: t2\nstatus: wat\n---\n", false),
+		newTicket(".ork/tickets/t3-c.md", "no frontmatter at all", false),
+		newTicket(".ork/tickets/notes.md", "---\ntitle: Sans id\n---\n", false),
+		newTicket(".ork/tickets/done/t4-d.md", "---\nid: t4\nstatus: in-review\n---\n", true),
 	}
 	b := buildBoard(tickets)
 	if got := columnIDs(b, "other"); !reflect.DeepEqual(got, []string{"notes", "t2", "t3"}) {
@@ -142,10 +142,10 @@ func TestBuildBoardColumns(t *testing.T) {
 
 func TestBuildBoardOrder(t *testing.T) {
 	open := func(id, priority, created string) ticket {
-		return newTicket("tickets/"+id+".md", "---\nid: "+id+"\nstatus: ready\npriority: "+priority+"\ncreated: "+created+"\n---\n", false)
+		return newTicket(".ork/tickets/"+id+".md", "---\nid: "+id+"\nstatus: ready\npriority: "+priority+"\ncreated: "+created+"\n---\n", false)
 	}
 	finished := func(id, updated string) ticket {
-		return newTicket("tickets/done/"+id+".md", "---\nid: "+id+"\nupdated: "+updated+"\n---\n", true)
+		return newTicket(".ork/tickets/done/"+id+".md", "---\nid: "+id+"\nupdated: "+updated+"\n---\n", true)
 	}
 	b := buildBoard([]ticket{
 		open("t10", "normal", "2026-01-02"),
@@ -167,9 +167,9 @@ func TestBuildBoardOrder(t *testing.T) {
 
 func TestBuildBoardWaitingDependencies(t *testing.T) {
 	b := buildBoard([]ticket{
-		newTicket("tickets/t3-c.md", "---\nid: t3\nstatus: ready\ndepends_on: [T1, t2, t99]\n---\n", false),
-		newTicket("tickets/t2-b.md", "---\nid: t2\nstatus: ready\n---\n", false),
-		newTicket("tickets/done/t1-a.md", "---\nid: t1\n---\n", true),
+		newTicket(".ork/tickets/t3-c.md", "---\nid: t3\nstatus: ready\ndepends_on: [T1, t2, t99]\n---\n", false),
+		newTicket(".ork/tickets/t2-b.md", "---\nid: t2\nstatus: ready\n---\n", false),
+		newTicket(".ork/tickets/done/t1-a.md", "---\nid: t1\n---\n", true),
 	})
 	for _, column := range b.Columns {
 		for _, item := range column.Tickets {
@@ -194,9 +194,9 @@ func TestNaturalLess(t *testing.T) {
 
 func TestDoneTicketsOfTheSameDayFollowTheirFileTime(t *testing.T) {
 	store := newFixture(t, map[string]string{
-		"tickets/done/t38-a.md": "---\nid: t38\nupdated: 2026-11-06\n---\n",
-		"tickets/done/t26-b.md": "---\nid: t26\nupdated: 2026-11-06\n---\n",
-		"tickets/done/t40-c.md": "---\nid: t40\nupdated: 2026-11-05\n---\n",
+		".ork/tickets/done/t38-a.md": "---\nid: t38\nupdated: 2026-11-06\n---\n",
+		".ork/tickets/done/t26-b.md": "---\nid: t26\nupdated: 2026-11-06\n---\n",
+		".ork/tickets/done/t40-c.md": "---\nid: t40\nupdated: 2026-11-05\n---\n",
 	})
 	now := time.Date(2026, 11, 6, 12, 0, 0, 0, time.UTC)
 	for name, at := range map[string]time.Time{
@@ -204,7 +204,7 @@ func TestDoneTicketsOfTheSameDayFollowTheirFileTime(t *testing.T) {
 		"t26-b.md": now,
 		"t40-c.md": now.Add(time.Hour),
 	} {
-		if err := os.Chtimes(filepath.Join(store.root, "tickets/done", name), at, at); err != nil {
+		if err := os.Chtimes(filepath.Join(store.root, ".ork/tickets/done", name), at, at); err != nil {
 			t.Fatal(err)
 		}
 	}

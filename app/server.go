@@ -23,7 +23,7 @@ const contentSecurityPolicy = "default-src 'none'; script-src 'self'; style-src 
 const eventsHeartbeat = 25 * time.Second
 
 // server is read-only: it has no route that writes, and the lead stays the only
-// writer of doc/tickets/.
+// writer of .ork/tickets/.
 type server struct {
 	repo     repoInfo
 	store    *docStore
@@ -96,8 +96,8 @@ func (s *server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 func (s *server) handleTree(w http.ResponseWriter, _ *http.Request) {
 	tree, err := s.store.tree()
 	if err != nil {
-		log.Printf("arbre de doc/ : %v", err)
-		http.Error(w, "doc/ illisible", http.StatusInternalServerError)
+		log.Printf("arbre des documents : %v", err)
+		http.Error(w, "documents illisibles", http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, tree)

@@ -7,6 +7,8 @@ const NARROW = window.matchMedia("(max-width: 720px)");
 const SILENT_MS = 5 * 60 * 1000; // No write for this long: say so rather than imply progress.
 const AGES_EVERY_MS = 5 * 1000;
 const OTHER_AGENTS = "other";
+const CONFIG_PATH = ".ork/config.md";
+const TICKETS_PATH = ".ork/tickets/";
 
 const el = Object.fromEntries(
   [...document.querySelectorAll("[data-el]")].map((node) => [node.dataset.el, node]),
@@ -25,7 +27,7 @@ const state = {
   docTitle: "ork",
   lastDoc: null,
   showAllDone: false,
-  closedDirs: new Set(["tickets/done"]),
+  closedDirs: new Set([TICKETS_PATH + "done"]),
   openedDirs: new Set(),
   agents: [],
   agentsText: "",
@@ -196,7 +198,7 @@ function renderBoard(previous = null) {
   if (total === 0) {
     el.board.replaceChildren(
       ...columns,
-      h("p", { class: "board-empty" }, "Aucun ticket dans doc/tickets/. Envoie une remarque au chef, ou tape ", h("code", {}, "/ork:ticket"), "."),
+      h("p", { class: "board-empty" }, `Aucun ticket dans ${TICKETS_PATH}. Envoie une remarque au chef, ou tape `, h("code", {}, "/ork:ticket"), "."),
     );
   } else {
     el.board.replaceChildren(...columns);
@@ -476,7 +478,7 @@ function renderTree() {
   const filter = normalize(el.filter.value.trim());
   const nodes = renderTreeNode(state.tree, filter, state.docPath) ?? [];
   if (nodes.length === 0) {
-    el.tree.replaceChildren(h("p", { class: "tree-none" }, filter ? "Aucun fichier ne correspond." : "Aucun Markdown dans doc/."));
+    el.tree.replaceChildren(h("p", { class: "tree-none" }, filter ? "Aucun fichier ne correspond." : "Aucun document."));
     return;
   }
   el.tree.replaceChildren(...nodes);
@@ -528,8 +530,7 @@ function renderPropValue(field) {
     const icon = statusIcon(field.value);
     return h("span", { class: icon ? "mono waits" : "mono" }, icon ? `${icon} ${field.value}` : field.value);
   }
-  const inDoc = field.value.match(/^doc\/(.+\.md)$/);
-  if (inDoc) return h("a", { class: "mono", href: docHref(inDoc[1]) }, field.value);
+  if (treeHasFile(state.tree, field.value)) return h("a", { class: "mono", href: docHref(field.value) }, field.value);
   return h("span", { class: "mono" }, field.value);
 }
 
@@ -593,8 +594,8 @@ async function loadDoc(path, anchor, isNavigation) {
   } catch (error) {
     if (error.status !== 404) throw error;
     // A ticket moves to done/ when it closes, possibly while it is on screen.
-    if (path.startsWith("tickets/") && !path.startsWith("tickets/done/")) {
-      const archived = "tickets/done/" + path.slice("tickets/".length);
+    if (path.startsWith(TICKETS_PATH) && !path.startsWith(TICKETS_PATH + "done/")) {
+      const archived = TICKETS_PATH + "done/" + path.slice(TICKETS_PATH.length);
       try {
         await fetchJSON("/api/doc?path=" + encodeURIComponent(archived));
         location.replace(docHref(archived));
@@ -653,7 +654,7 @@ async function route(isNavigation = true) {
       let path = current.path;
       if (!path) {
         path = state.lastDoc && treeHasFile(state.tree, state.lastDoc) ? state.lastDoc : null;
-        if (!path && treeHasFile(state.tree, "ork.md")) path = "ork.md";
+        if (!path && treeHasFile(state.tree, CONFIG_PATH)) path = CONFIG_PATH;
         if (path) {
           location.replace(docHref(path));
           return;

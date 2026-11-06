@@ -14,8 +14,8 @@ linters:
   settings:
     gosec:
       excludes:
-        # Paths come from docStore.resolve, which confines them to doc/, or from
-        # the git common dir.
+        # Paths come from docStore.resolve, which confines them to .ork/ and the
+        # documents folder, from the fixed config path, or from the git common dir.
         - G304
         # Fixed commands (git, open, xdg-open, this binary).
         - G204

@@ -20,7 +20,7 @@ func newTestServer(t *testing.T, files map[string]string) (*server, *docStore) {
 	t.Helper()
 	store := newFixture(t, files)
 	agents := newAgentStoreAt(filepath.Join(t.TempDir(), "no-sessions-yet"))
-	s, err := newServer(repoInfo{Root: filepath.Dir(store.root), DocDir: store.root}, store, agents, newHub(), newHub(), testPort)
+	s, err := newServer(repoInfo{Root: store.root, DocsDir: defaultDocsDir}, store, agents, newHub(), newHub(), testPort)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func request(s *server, method, target, host string) *httptest.ResponseRecorder 
 const goodHost = "127.0.0.1:4799"
 
 func TestHostCheck(t *testing.T) {
-	s, _ := newTestServer(t, map[string]string{"a.md": "x"})
+	s, _ := newTestServer(t, map[string]string{"doc/a.md": "x"})
 	for host, want := range map[string]int{
 		goodHost:         http.StatusOK,
 		"localhost:4799": http.StatusOK,
@@ -54,9 +54,9 @@ func TestHostCheck(t *testing.T) {
 }
 
 func TestReadOnly(t *testing.T) {
-	s, _ := newTestServer(t, map[string]string{"a.md": "x"})
+	s, _ := newTestServer(t, map[string]string{"doc/a.md": "x"})
 	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {
-		for _, target := range []string{"/", "/api/doc?path=a.md"} {
+		for _, target := range []string{"/", "/api/doc?path=doc/a.md"} {
 			w := request(s, method, target, goodHost)
 			if w.Code != http.StatusMethodNotAllowed {
 				t.Errorf("%s %s: %d", method, target, w.Code)
@@ -69,7 +69,7 @@ func TestReadOnly(t *testing.T) {
 }
 
 func TestSecurityHeadersOnEveryResponse(t *testing.T) {
-	s, _ := newTestServer(t, map[string]string{"a.md": "x"})
+	s, _ := newTestServer(t, map[string]string{"doc/a.md": "x"})
 	responses := []*httptest.ResponseRecorder{
 		request(s, http.MethodGet, "/", goodHost),
 		request(s, http.MethodGet, "/api/tree", goodHost),
@@ -89,11 +89,11 @@ func TestSecurityHeadersOnEveryResponse(t *testing.T) {
 
 func TestDocRoute(t *testing.T) {
 	s, _ := newTestServer(t, map[string]string{
-		"tickets/t1-a.md": "---\nid: t1\nstatus: ready\n---\n# Titre\n",
-		"plain.md":        "# Sans frontmatter\n",
-		"kanban.base":     "secret",
+		".ork/tickets/t1-a.md": "---\nid: t1\nstatus: ready\n---\n# Titre\n",
+		"doc/plain.md":         "# Sans frontmatter\n",
+		"doc/kanban.base":      "secret",
 	})
-	w := request(s, http.MethodGet, "/api/doc?path=tickets/t1-a.md", goodHost)
+	w := request(s, http.MethodGet, "/api/doc?path=.ork/tickets/t1-a.md", goodHost)
 	if w.Code != http.StatusOK {
 		t.Fatalf("status %d", w.Code)
 	}
@@ -104,11 +104,11 @@ func TestDocRoute(t *testing.T) {
 	if fieldValue(doc.Fields, "status") != "ready" || !strings.Contains(doc.HTML, "<h1") || strings.Contains(doc.HTML, "status:") {
 		t.Errorf("doc = %+v", doc)
 	}
-	w = request(s, http.MethodGet, "/api/doc?path=plain.md", goodHost)
+	w = request(s, http.MethodGet, "/api/doc?path=doc/plain.md", goodHost)
 	if !strings.Contains(w.Body.String(), `"fields":[]`) {
 		t.Errorf("fields must be an empty list: %s", w.Body.String())
 	}
-	for _, path := range []string{"missing.md", "kanban.base", "../.env", "../../etc/passwd", "", "%2e%2e/.env"} {
+	for _, path := range []string{"missing.md", "doc/missing.md", "doc/kanban.base", ".env", "doc/../.env", "../.env", "../../etc/passwd", "", "%2e%2e/.env"} {
 		if got := request(s, http.MethodGet, "/api/doc?path="+path, goodHost).Code; got != http.StatusNotFound {
 			t.Errorf("path %q: %d", path, got)
 		}
@@ -117,18 +117,18 @@ func TestDocRoute(t *testing.T) {
 
 func TestRawRoute(t *testing.T) {
 	s, store := newTestServer(t, map[string]string{
-		"a.png": "png",
-		"a.md":  "md",
-		"a.js":  "js",
+		"doc/a.png": "png",
+		"doc/a.md":  "md",
+		"doc/a.js":  "js",
 	})
-	if err := os.Symlink(filepath.Join(filepath.Dir(store.root), ".env"), filepath.Join(store.root, "leak.png")); err != nil {
+	if err := os.Symlink(filepath.Join(store.root, ".env"), filepath.Join(store.root, "doc/leak.png")); err != nil {
 		t.Fatal(err)
 	}
-	w := request(s, http.MethodGet, "/raw/a.png", goodHost)
+	w := request(s, http.MethodGet, "/raw/doc/a.png", goodHost)
 	if w.Code != http.StatusOK || w.Header().Get("Content-Type") != "image/png" {
 		t.Errorf("image: %d %s", w.Code, w.Header().Get("Content-Type"))
 	}
-	for _, target := range []string{"/raw/a.md", "/raw/a.js", "/raw/leak.png", "/raw/missing.png", "/raw/..%2f.env", "/raw/%2e%2e/.env"} {
+	for _, target := range []string{"/raw/doc/a.md", "/raw/doc/a.js", "/raw/doc/leak.png", "/raw/doc/missing.png", "/raw/.env", "/raw/doc/..%2f.env", "/raw/%2e%2e/.env"} {
 		if got := request(s, http.MethodGet, target, goodHost); got.Code == http.StatusOK {
 			t.Errorf("%s served: %s", target, got.Body.String())
 		}
@@ -137,9 +137,9 @@ func TestRawRoute(t *testing.T) {
 
 func TestTicketsRoute(t *testing.T) {
 	s, _ := newTestServer(t, map[string]string{
-		"tickets/t1-a.md":         "---\nid: t1\nstatus: ready\n---\n",
-		"tickets/done/t2-b.md":    "---\nid: t2\nstatus: done\n---\n",
-		"tickets/annexes/note.md": "---\nid: t3\nstatus: ready\n---\n",
+		".ork/tickets/t1-a.md":         "---\nid: t1\nstatus: ready\n---\n",
+		".ork/tickets/done/t2-b.md":    "---\nid: t2\nstatus: done\n---\n",
+		".ork/tickets/annexes/note.md": "---\nid: t3\nstatus: ready\n---\n",
 	})
 	var b board
 	if err := json.Unmarshal(request(s, http.MethodGet, "/api/tickets", goodHost).Body.Bytes(), &b); err != nil {
@@ -154,7 +154,7 @@ func TestTicketsRoute(t *testing.T) {
 }
 
 func TestTicketsRouteWithoutTicketsFolder(t *testing.T) {
-	s, _ := newTestServer(t, map[string]string{"a.md": "x"})
+	s, _ := newTestServer(t, map[string]string{"doc/a.md": "x"})
 	w := request(s, http.MethodGet, "/api/tickets", goodHost)
 	if w.Code != http.StatusOK {
 		t.Fatalf("status %d", w.Code)
@@ -169,11 +169,11 @@ func TestTicketsRouteWithoutTicketsFolder(t *testing.T) {
 }
 
 func TestWatchAnnouncesChangesInNewFolders(t *testing.T) {
-	store := newFixture(t, map[string]string{"tickets/t1.md": "x"})
+	store := newFixture(t, map[string]string{".ork/tickets/t1.md": "x"})
 	h := newHub()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	if err := watchDocs(ctx, store.root, h); err != nil {
+	if err := watchDocs(ctx, store.roots(), h); err != nil {
 		t.Fatal(err)
 	}
 	changes := h.subscribe()
@@ -185,12 +185,12 @@ func TestWatchAnnouncesChangesInNewFolders(t *testing.T) {
 			t.Fatalf("no event after %s", what)
 		}
 	}
-	if err := os.WriteFile(filepath.Join(store.root, "tickets/t1.md"), []byte("y"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(store.root, ".ork/tickets/t1.md"), []byte("y"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	expect("a file change")
 
-	newDir := filepath.Join(store.root, "story")
+	newDir := filepath.Join(store.root, "doc/story")
 	if err := os.Mkdir(newDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestWatchAnnouncesChangesInNewFolders(t *testing.T) {
 }
 
 func TestEventsStream(t *testing.T) {
-	s, _ := newTestServer(t, map[string]string{"a.md": "x"})
+	s, _ := newTestServer(t, map[string]string{"doc/a.md": "x"})
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Host = goodHost
 		s.ServeHTTP(w, r)
@@ -227,5 +227,47 @@ func TestEventsStream(t *testing.T) {
 	}
 	if !strings.Contains(string(buffer[:n]), "event: changed") {
 		t.Errorf("got %q", buffer[:n])
+	}
+}
+
+func TestWatchWaitsForAMissingDocsDir(t *testing.T) {
+	store := newFixture(t, map[string]string{".ork/config.md": "x", "README.md": "x"})
+	if err := os.Remove(filepath.Join(store.root, "doc")); err != nil {
+		t.Fatal(err)
+	}
+	h := newHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := watchDocs(ctx, store.roots(), h); err != nil {
+		t.Fatal(err)
+	}
+	changes := h.subscribe()
+	if err := os.WriteFile(filepath.Join(store.root, "README.md"), []byte("y"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(store.root, "dist"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-changes:
+		t.Fatal("event for a file outside the watched folders")
+	case <-time.After(400 * time.Millisecond):
+	}
+	if err := os.Mkdir(filepath.Join(store.root, "doc"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-changes:
+	case <-time.After(3 * time.Second):
+		t.Fatal("no event when the folder appears")
+	}
+	time.Sleep(50 * time.Millisecond)
+	if err := os.WriteFile(filepath.Join(store.root, "doc/a.md"), []byte("y"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-changes:
+	case <-time.After(3 * time.Second):
+		t.Fatal("no event for a file in the new folder")
 	}
 }

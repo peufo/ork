@@ -6,10 +6,10 @@ disable-model-invocation: true
 
 Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef : `claude --agent ork:lead` `` et arrête-toi.
 
-Le développeur veut savoir où on en est : au démarrage d'une session, ou en cours de journée. Il a choisi ce moment : c'est là que tu livres tout ce que tu as gardé en différé, c'est-à-dire les lignes `[deferred]` des journaux, dans `doc/tickets/` comme dans `done/`. Une fois le point rendu, remplace leur marque par `[delivered]`.
+Le développeur veut savoir où on en est : au démarrage d'une session, ou en cours de journée. Il a choisi ce moment : c'est là que tu livres tout ce que tu as gardé en différé, c'est-à-dire les lignes `[deferred]` des journaux, dans `.ork/tickets/` comme dans `done/`. Une fois le point rendu, remplace leur marque par `[delivered]`.
 
-1. Lis `doc/ork.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.
-2. Relis le frontmatter et la section `## Questions` de tous les tickets de `doc/tickets/` (pas `done/`). Vérifie avec `git worktree list --porcelain` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore. Ne te fie pas à ta mémoire de conversation. Une dépendance (`depends_on`) qui ne correspond à aucun ticket, ni dans `doc/tickets/` ni dans `done/`, ou qui forme un cycle, va dans **À toi**.
+1. Lis `.ork/config.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.
+2. Relis le frontmatter et la section `## Questions` de tous les tickets de `.ork/tickets/` (pas `done/`). Vérifie avec `git worktree list --porcelain` et `git branch --list 'ticket/*'` quelles branches de tickets existent encore. Ne te fie pas à ta mémoire de conversation. Une dépendance (`depends_on`) qui ne correspond à aucun ticket, ni dans `.ork/tickets/` ni dans `done/`, ou qui forme un cycle, va dans **À toi**.
 3. Un ticket en `planning` ou `in-progress` dont l'ouvrier (`agent:`) n'apparaît pas dans `ListAgents` est **arrêté** : son ouvrier ne tourne plus. En début de session, c'est le cas de tous. Ne te fie pas à ta mémoire de ce que tu as lancé : elle a pu être compactée. Ne le relance pas d'office : signale-le.
 4. Réponds en lignes d'état (voir « Les lignes d'état » dans tes instructions), une par ticket, dans l'ordre de leur tableau :
    - **arrêté** : `` [STOP] `tN-slug` : plan ou exécution, ce que dit la fin du journal ``. Le relancer, c'est donner à un nouvel ouvrier le ticket complet, journal compris, sur la branche existante (voir « Si l'ouvrier n'est plus joignable » dans tes instructions) ;

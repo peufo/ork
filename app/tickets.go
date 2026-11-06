@@ -289,11 +289,11 @@ func rank(priority string) int {
 	return priorityRank["normal"]
 }
 
-// loadTickets reads doc/tickets/*.md and doc/tickets/done/*.md, nothing deeper:
+// loadTickets reads .ork/tickets/*.md and .ork/tickets/done/*.md, nothing deeper:
 // annexes/ and captures/ are not tickets.
 func (d *docStore) loadTickets() []ticket {
-	tickets := d.loadTicketDir("tickets", false)
-	return append(tickets, d.loadTicketDir("tickets/done", true)...)
+	tickets := d.loadTicketDir(ticketsPath, false)
+	return append(tickets, d.loadTicketDir(ticketsPath+"/done", true)...)
 }
 
 func (d *docStore) loadTicketDir(rel string, inDone bool) []ticket {

@@ -1,5 +1,5 @@
-// Command ork-app shows a project's doc/ folder and its tickets as a kanban
-// board, read-only, on a local web page.
+// Command ork-app shows a project's tickets as a kanban board and its documents,
+// read-only, on a local web page.
 package main
 
 import (
@@ -219,7 +219,7 @@ func startDetached(repo repoInfo, opts options) error {
 }
 
 func serve(repo repoInfo, opts options) error {
-	store, err := newDocStore(repo.DocDir)
+	store, err := newDocStore(repo.Root, repo.DocsDir)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func serve(repo repoInfo, opts options) error {
 	defer cancel()
 
 	changes := newHub()
-	if err := watchDocs(ctx, store.root, changes); err != nil {
+	if err := watchDocs(ctx, store.roots(), changes); err != nil {
 		log.Printf("pas de rafraîchissement automatique : %v", err)
 	}
 	agents := newAgentStore(repo.Root)

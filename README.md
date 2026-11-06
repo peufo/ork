@@ -14,20 +14,23 @@ Un plugin Claude Code pour travailler avec **une seule session principale** qui 
 | `skills/ideation` | Idéation sur une story : chargé par le chef dès qu'on discute d'une fonctionnalité, ou par `/ork:ideation`. Il challenge les idées sous plusieurs angles et fait des contre-propositions quand elles sont meilleures. |
 | `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. Depuis le chef uniquement. |
 | `skills/status` | `/ork:status` : état de tous les tickets, au démarrage d'une session comme en cours de journée, et livraison des notifications différées. Depuis le chef uniquement. |
-| `skills/ui` | `/ork:ui` : ouvre la micro-app, un kanban des tickets et un lecteur des Markdown de `doc/`, en lecture seule. |
+| `skills/ui` | `/ork:ui` : ouvre la micro-app, un kanban des tickets et un lecteur des documents du projet, en lecture seule. |
 | `app/`, `scripts/ork-app.sh` | Le code de la micro-app (un binaire Go) et le lanceur qui télécharge le binaire au premier usage. |
 
 Rien de tout ça ne va dans le dépôt du client. Dans le dépôt, il n'y a que des **données** en Markdown :
 
 ```
-doc/
-  ork.md                ← config du projet (commande de tests, branche, parallélisme, revue, autonomie)
-  story/                ← tes stories, comme aujourd'hui
+.ork/
+  config.md             ← config du projet (dossier de doc, commande de tests, branche, parallélisme, revue, autonomie)
   tickets/
-    t12-….md         ← un fichier par ticket ouvert, statut en frontmatter
+    t12-….md            ← un fichier par ticket ouvert, statut en frontmatter
     captures/           ← captures d'écran jointes aux tickets
     done/               ← tickets intégrés
+doc/                    ← ta documentation, à toi (docs_dir dans la config, doc/ par défaut)
+  story/                ← tes stories
 ```
+
+Un projet qui suit encore l'ancien emplacement (`doc/ork.md`, `doc/tickets/`) se migre avec `/ork:init`.
 
 ## Installation
 
@@ -53,7 +56,7 @@ Dans le dépôt du projet :
 claude --agent ork:lead
 ```
 
-Le premier jour, tape `/ork:init` : il crée `doc/ork.md` et `doc/tickets/` après ton accord. Les jours suivants, tape `/ork:status`.
+Le premier jour, tape `/ork:init` : il crée `.ork/config.md` et `.ork/tickets/` après ton accord. Les jours suivants, tape `/ork:status`.
 
 Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse porte toujours sur celui-là. Ses messages commencent par des lignes d'état, une par fait, qui se lisent d'un coup d'œil :
 
@@ -63,7 +66,7 @@ Le chef ne présente qu'**un sujet à la fois**, le plus urgent, et ta réponse 
 [DEP] `t22-remote-functions-auth-oauth` -> `t27-colonnes-state-before`
 [WAIT] 👀 `t28-traduire-langue-apprise-vers-connue`
 
-### 👀 [t27-colonnes-state-before](doc/tickets/t27-colonnes-state-before.md) · 2 à relire sur 4
+### 👀 [t27-colonnes-state-before](.ork/tickets/t27-colonnes-state-before.md) · 2 à relire sur 4
 Remplace le JSON `state_before` de `review_logs` par 9 colonnes typées.
 6 fichiers · +182 −40 · 3 commits
 
@@ -106,7 +109,7 @@ Toujours dans `.claude/settings.local.json` du projet, ou dans `~/.claude/settin
 
 Ce réglage empêche Claude de « forker » la conversation, car un fork hérite de toute la conversation de l'orchestrateur. Le prompt du chef l'interdit déjà, ceci n'est qu'un filet de sécurité.
 
-Dans le terminal, la status line montre en permanence ce qui attend le développeur dans les tickets (`ork · ⏸ bloqué : t14 · 👀 2 à relire · ⚙ 1 en cours`). Un plugin ne peut pas la fournir : ajoute-la à tes réglages, ou accepte la proposition de `/ork:init`. Elle demande `jq`, et n'affiche rien hors d'un dépôt qui contient `doc/ork.md`, donc `~/.claude/settings.json` lui convient :
+Dans le terminal, la status line montre en permanence ce qui attend le développeur dans les tickets (`ork · ⏸ bloqué : t14 · 👀 2 à relire · ⚙ 1 en cours`). Un plugin ne peut pas la fournir : ajoute-la à tes réglages, ou accepte la proposition de `/ork:init`. Elle demande `jq`, et n'affiche rien hors d'un dépôt qui contient `.ork/config.md`, donc `~/.claude/settings.json` lui convient :
 
 ```json
 {
@@ -125,12 +128,12 @@ Pour le mode de permission, le mode **auto** (une fois validé dans ton environn
 
 - **Le matin** : `ork`, puis `/ork:status`. L'état des tickets (ceux qui tournaient hier sont signalés comme arrêtés), puis une seule question ou proposition.
 - **Tu remarques un truc** : `/ork:ticket le bouton reste actif pendant l'envoi`, avec une capture collée. Tu reçois une ligne en retour et tu retournes à ce que tu faisais.
-- **Idéation** : tu parles normalement d'une story. Le chef met à jour `doc/story/…`, propose un découpage en tickets et les crée après ton accord.
+- **Idéation** : tu parles normalement d'une story. Le chef met à jour `<docs_dir>/story/…`, propose un découpage en tickets et les crée après ton accord.
 - **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones` des tickets et `max_parallel`. Un ticket dont le `depends_on` cite un ticket pas encore intégré attend, puis part seul dès que ce dernier l'est. Il lance le mode plan quand il le faut, et sinon l'exécution directe.
 - **Il te dérange seulement pour** une question bloquante, un plan à valider, un échec ou un fait nouveau. Le reste attend ton `/ork:status`.
-- **Il te demande trop, ou pas assez ?** Dis-le (« pas besoin de me demander ça », « demande-moi avant »). Il propose une règle d'une ligne pour `## Ask before` ou `## No need to ask` dans `doc/ork.md`, et l'écrit après ton accord. Le tableau « Qui décide quoi » de `agents/lead.md` donne les niveaux par défaut. Push, force, dépôt principal sale et validation des plans restent hors dosage.
-- **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]` dans `doc/ork.md`, chaque ouvrier passe ces revues sur son travail avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue auto est propre et où l'ouvrier ne signale rien. `review: required` dans un ticket force ta relecture. Le chef le pose seul quand une règle de `## Review required when` s'applique (auth, migrations…).
-- **Note de confiance** : chaque point de relecture et chaque recommandation d'un ouvrier porte une note sur 10 (0 : aucune idée, 10 : rien ne manque, certain). `confidence_threshold: 8` dans `doc/ork.md` laisse passer ce qui atteint 8 : le point est coché d'office, la question est tranchée par la recommandation et signalée par une ligne `[AUTO]`. Absent : tu vois tout ; `0` : tout passe. Les plans, `review: required` et `## Ask before` passent toujours par toi.
+- **Il te demande trop, ou pas assez ?** Dis-le (« pas besoin de me demander ça », « demande-moi avant »). Il propose une règle d'une ligne pour `## Ask before` ou `## No need to ask` dans `.ork/config.md`, et l'écrit après ton accord. Le tableau « Qui décide quoi » de `agents/lead.md` donne les niveaux par défaut. Push, force, dépôt principal sale et validation des plans restent hors dosage.
+- **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]` dans `.ork/config.md`, chaque ouvrier passe ces revues sur son travail avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue auto est propre et où l'ouvrier ne signale rien. `review: required` dans un ticket force ta relecture. Le chef le pose seul quand une règle de `## Review required when` s'applique (auth, migrations…).
+- **Note de confiance** : chaque point de relecture et chaque recommandation d'un ouvrier porte une note sur 10 (0 : aucune idée, 10 : rien ne manque, certain). `confidence_threshold: 8` dans `.ork/config.md` laisse passer ce qui atteint 8 : le point est coché d'office, la question est tranchée par la recommandation et signalée par une ligne `[AUTO]`. Absent : tu vois tout ; `0` : tout passe. Les plans, `review: required` et `## Ask before` passent toujours par toi.
 - **Relecture guidée** : « relisons t12 » te donne une vue d'ensemble (ce que fait le ticket, le volume du diff, tous les points triés par note, ceux cochés d'office marqués `✓`), puis chaque point à relire, un par message. Tu réponds « ok » ou une remarque, que le chef transmet à l'ouvrier. Puis « intègre t12 » rebase la branche sur la branche d'intégration et la vérifie dans son worktree (c'est l'ouvrier qui le fait, en INTEGRATION MODE). Le chef la pose ensuite par avance rapide (`merge --ff-only`), puis archive le ticket et supprime le worktree. L'historique reste linéaire, et la branche d'intégration ne bouge que lorsque tout est vert.
 - **Worktree hors ticket** : « intègre <worktree> » fonctionne aussi pour une session lancée à part. `/ork:status` signale ces worktrees orphelins.
 - **Conventions du projet** : ork reste générique. Ce qui est propre au projet va dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés à régénérer plutôt que fusionner, vérifications supplémentaires selon les zones, style de commit.
@@ -150,11 +153,11 @@ Un ouvrier qui rencontre une décision qui ne lui appartient pas **s'arrête** e
 
 - **Tickets** : un kanban, une colonne par statut. Il se met à jour tout seul quand le chef écrit un ticket, et une carte qui vient de changer de colonne se signale brièvement. `blocked`, `plan-review` et `in-review` ressortent : ce sont eux qui t'attendent.
 - **Agents** : sur la carte d'un ticket, un bouton par agent au travail, avec ce qu'il fait en ce moment. S'il n'y en a aucun, le bouton montre le dernier passage. Un clic ouvre son fil d'activité, mis à jour en direct : une ligne par action, les sous-agents, et son rapport. Un agent sans ticket apparaît dans l'en-tête. La page dit « silencieux depuis… » après 5 minutes sans écriture, et « interrompu » après une heure.
-- **Documents** : tous les Markdown de `doc/`, avec leurs liens, et les captures d'écran citées dans les tickets.
+- **Documents** : tous les Markdown de `.ork/` et de `docs_dir`, avec leurs liens, et les captures d'écran citées dans les tickets. La micro-app lit `docs_dir` à son démarrage : relance-la si tu le changes.
 
-Elle ne fait que lire : elle n'a aucune route d'écriture, et le chef reste le seul à écrire dans `doc/tickets/`. Elle écoute seulement sur `127.0.0.1`.
+Elle ne fait que lire : elle n'a aucune route d'écriture, et le chef reste le seul à écrire dans `.ork/tickets/`. Elle écoute seulement sur `127.0.0.1`.
 
-Le fil d'activité lit les transcripts que Claude Code écrit sous `~/.claude/projects/<dépôt>/` (ou `$CLAUDE_CONFIG_DIR`). C'est la seule lecture hors de `doc/`, et la micro-app ne rend ni les résultats d'outils, ni le contenu des fichiers. Une commande sans description s'affiche telle quelle. La doc de Claude Code donne l'emplacement de ces fichiers, mais ne garantit pas leur format : si une mise à jour le change, l'agent reste affiché, sans son détail. Les sessions lancées depuis un worktree ne sont pas lues.
+Le fil d'activité lit les transcripts que Claude Code écrit sous `~/.claude/projects/<dépôt>/` (ou `$CLAUDE_CONFIG_DIR`). C'est la seule lecture hors de ces deux dossiers, et la micro-app ne rend ni les résultats d'outils, ni le contenu des fichiers. Une commande sans description s'affiche telle quelle. La doc de Claude Code donne l'emplacement de ces fichiers, mais ne garantit pas leur format : si une mise à jour le change, l'agent reste affiché, sans son détail. Les sessions lancées depuis un worktree ne sont pas lues.
 
 **Rien à installer.** Au premier usage d'une version d'ork, `scripts/ork-app.sh` télécharge le binaire de ta plateforme (macOS ou Linux, arm64 ou amd64) depuis les releases GitHub, vérifie sa somme de contrôle et le garde dans `~/.cache/ork/`. Cette somme vit dans la même release : elle protège d'un téléchargement corrompu, pas d'une release compromise. Le serveur tourne en arrière-plan, et ses seules traces dans le projet sont `ork-app.json` et `ork-app.log` dans le dossier `.git`.
 
@@ -178,7 +181,7 @@ sh run.sh <projet>    # compile, puis ouvre l'app sur ce projet ; Ctrl-C pour l'
 
 - **Le prompt du chef remplace entièrement celui de Claude Code**, comme `--system-prompt`. Ton `CLAUDE.md` est toujours chargé. C'est voulu : le chef n'a pas besoin des instructions de codage. Les règles générales qui lui servent (outils, contenu non fiable, actions irréversibles, compte rendu fidèle) sont reprises dans la section « Socle » de `lead.md`. Les ouvriers, comme tout sous-agent, n'ont jamais reçu le prompt par défaut : la section « Socle » de `worker.md` en reprend l'essentiel pour coder.
 - **Les sous-agents sont en arrière-plan par défaut** : le chef reste disponible pendant qu'ils travaillent, et leurs rapports arrivent en notification.
-- **Le worktree d'un ouvrier part de la branche par défaut du dépôt**, pas de la branche courante. L'ouvrier commence donc par s'aligner sur la `integration_branch` de `doc/ork.md`. Seul ce qui y est **commité** lui parvient : commite avant de lancer un ticket qui dépend d'un changement récent. Entre deux tickets, c'est `depends_on` qui s'en charge : le chef attend que le premier soit intégré.
+- **Le worktree d'un ouvrier part de la branche par défaut du dépôt**, pas de la branche courante. L'ouvrier commence donc par s'aligner sur la `integration_branch` de `.ork/config.md`. Seul ce qui y est **commité** lui parvient : commite avant de lancer un ticket qui dépend d'un changement récent. Entre deux tickets, c'est `depends_on` qui s'en charge : le chef attend que le premier soit intégré.
 - **Les tickets ne sont écrits que par le chef**, dans le dépôt principal. Les ouvriers reçoivent le ticket recopié dans leur message, parce que leur worktree ne contient pas les fichiers non commités.
 - **Les agents d'un plugin ignorent** les champs `permissionMode`, `hooks` et `mcpServers`. Si tu en as besoin plus tard, copie l'agent concerné dans `~/.claude/agents/`.
 - **`initialPrompt` ne s'applique pas aux agents de plugin**, d'où le `/ork:status` à taper au démarrage.
@@ -187,4 +190,4 @@ sh run.sh <projet>    # compile, puis ouvre l'app sur ce projet ; Ctrl-C pour l'
 
 ## Démarrer petit
 
-La première semaine, mets `max_parallel: 1` dans `doc/ork.md`. Le but est de roder trois choses : le format des rapports, le protocole de blocage et le seuil « plan requis ». Tu ajusteras ensuite les prompts de `agents/` selon ce qui t'agace. Ce sont des fichiers Markdown, et `/reload-plugins` recharge les changements sans redémarrer.
+La première semaine, mets `max_parallel: 1` dans `.ork/config.md`. Le but est de roder trois choses : le format des rapports, le protocole de blocage et le seuil « plan requis ». Tu ajusteras ensuite les prompts de `agents/` selon ce qui t'agace. Ce sont des fichiers Markdown, et `/reload-plugins` recharge les changements sans redémarrer.

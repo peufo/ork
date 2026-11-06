@@ -331,7 +331,7 @@ func TestAgentReportKeepsItsLines(t *testing.T) {
 }
 
 func TestAgentRoutes(t *testing.T) {
-	s, _ := newTestServer(t, map[string]string{"tickets/t1-a.md": "---\nid: t1\nstatus: in-progress\nagent: a1\n---\n"})
+	s, _ := newTestServer(t, map[string]string{".ork/tickets/t1-a.md": "---\nid: t1\nstatus: in-progress\nagent: a1\n---\n"})
 	dir := t.TempDir()
 	writeAgentFiles(t, dir, agentFile{id: "a1", meta: `{"description":"x","agentType":"ork:worker"}`, lines: []string{linePrompt, lineBash, lineResult}})
 	secret := filepath.Join(filepath.Dir(dir), "secret.jsonl")
