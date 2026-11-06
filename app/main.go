@@ -234,7 +234,10 @@ func serve(repo repoInfo, opts options) error {
 	if err := watchDocs(ctx, store.root, changes); err != nil {
 		log.Printf("pas de rafraîchissement automatique : %v", err)
 	}
-	handler, err := newServer(repo, store, changes, port)
+	agents := newAgentStore(repo.Root)
+	agentChanges := newHub()
+	go watchAgents(ctx, agents, agentChanges)
+	handler, err := newServer(repo, store, agents, changes, agentChanges, port)
 	if err != nil {
 		return err
 	}

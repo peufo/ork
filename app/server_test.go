@@ -19,7 +19,8 @@ const testPort = 4799
 func newTestServer(t *testing.T, files map[string]string) (*server, *docStore) {
 	t.Helper()
 	store := newFixture(t, files)
-	s, err := newServer(repoInfo{Root: filepath.Dir(store.root), DocDir: store.root}, store, newHub(), testPort)
+	agents := newAgentStoreAt(filepath.Join(t.TempDir(), "no-sessions-yet"))
+	s, err := newServer(repoInfo{Root: filepath.Dir(store.root), DocDir: store.root}, store, agents, newHub(), newHub(), testPort)
 	if err != nil {
 		t.Fatal(err)
 	}

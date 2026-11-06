@@ -4,6 +4,9 @@
 const DONE_PREVIEW = 20;
 const MOVED_MS = 2400; // Same duration as the `moved` animation in style.css.
 const NARROW = window.matchMedia("(max-width: 720px)");
+const SILENT_MS = 5 * 60 * 1000; // No write for this long: say so rather than imply progress.
+const AGES_EVERY_MS = 5 * 1000;
+const OTHER_AGENTS = "other";
 
 const el = Object.fromEntries(
   [...document.querySelectorAll("[data-el]")].map((node) => [node.dataset.el, node]),
@@ -24,6 +27,10 @@ const state = {
   showAllDone: false,
   closedDirs: new Set(["tickets/done"]),
   openedDirs: new Set(),
+  agents: [],
+  agentsText: "",
+  agentId: null,
+  agentDetailText: "",
 };
 
 function h(tag, attrs = {}, ...children) {
@@ -58,7 +65,8 @@ function parseRoute() {
     const anchor = query.startsWith("a=") ? safeDecode(query.slice(2)) : null;
     return { view: "docs", path: safeDecode(path), anchor };
   }
-  return { view: "board" };
+  const query = raw.split("?")[1] ?? "";
+  return { view: "board", agent: query.startsWith("agent=") ? safeDecode(query.slice("agent=".length)) : null };
 }
 
 async function fetchJSON(url) {
@@ -89,7 +97,9 @@ function renderSummary() {
   if (plans.length) parts.push(h("span", { class: "waits" }, `📋 plan : ${plans.join(" ")}`));
   if (reviews) parts.push(h("span", { class: "waits" }, `👀 ${reviews} à relire`));
   if (running) parts.push(h("span", {}, `⚙ ${running} en cours`));
-  if (!blocked.length && !plans.length && !reviews && !running) parts.push(h("span", {}, "rien ne t'attend"));
+  const others = state.agents.filter((agent) => !agent.ticket).length;
+  if (others) parts.push(h("span", {}, h("a", { href: agentHref(OTHER_AGENTS) }, others === 1 ? "1 agent hors ticket" : `${others} agents hors ticket`)));
+  if (parts.length === 0) parts.push(h("span", {}, "rien ne t'attend"));
   el.summary.replaceChildren(...parts);
 }
 
@@ -102,17 +112,24 @@ function renderCard(ticket, moved, showStatus) {
   if (ticket.waiting.length) tags.push(h("span", { class: "tag" }, `attend ${ticket.waiting.join(", ")}`));
   if (ticket.malformed) tags.push(h("span", { class: "tag malformed" }, "frontmatter illisible"));
   else if (showStatus) tags.push(h("span", { class: "tag malformed" }, ticket.status ? `status: ${ticket.status}` : "sans status"));
+  const wanted = ticket.id.toLowerCase();
+  const agents = state.agents.filter((agent) => agent.ticket?.toLowerCase() === wanted);
   const card = h(
-    "a",
-    { class: "card", href: docHref(ticket.path) },
+    "article",
+    { class: "card" },
     h(
-      "div",
-      { class: "card-meta" },
-      h("span", { class: "card-id" }, ticket.id),
-      ticket.updated ? h("span", { class: "card-date" }, ticket.updated) : null,
+      "a",
+      { class: "card-link", href: docHref(ticket.path) },
+      h(
+        "div",
+        { class: "card-meta" },
+        h("span", { class: "card-id" }, ticket.id),
+        ticket.updated ? h("span", { class: "card-date" }, ticket.updated) : null,
+      ),
+      h("p", { class: "card-title" }, ticket.title),
+      h("div", { class: "card-tags" }, tags),
     ),
-    h("p", { class: "card-title" }, ticket.title),
-    h("div", { class: "card-tags" }, tags),
+    agents.length ? h("div", { class: "card-agents" }, agents.map(renderAgentChip)) : null,
   );
   markMoved(card, ticket.path, moved);
   return card;
@@ -204,6 +221,211 @@ async function loadBoard() {
   renderBoard(state.columnOf);
   state.columnOf = columnOf;
   renderSummary();
+}
+
+/* Agents */
+
+function agentHref(id) {
+  return "#/board?agent=" + encodeURIComponent(id);
+}
+
+function spanText(ms) {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  if (seconds < 60) return `${seconds} s`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours} h`;
+  return `${Math.round(hours / 24)} j`;
+}
+
+function isSilent(state_, since) {
+  return state_ === "running" && Date.now() - Date.parse(since) > SILENT_MS;
+}
+
+function ageText(state_, since) {
+  const elapsed = spanText(Date.now() - Date.parse(since));
+  if (state_ === "finished") return `terminé il y a ${elapsed}`;
+  if (state_ === "interrupted") return `interrompu il y a ${elapsed}`;
+  return isSilent(state_, since) ? `silencieux depuis ${elapsed}` : `actif il y a ${elapsed}`;
+}
+
+function renderAge(agent) {
+  return h("span", { class: "agent-age", "data-since": agent.lastActivity, "data-state": agent.state }, ageText(agent.state, agent.lastActivity));
+}
+
+function agentClasses(base, agent) {
+  return [base, agent.state, isSilent(agent.state, agent.lastActivity) && "silent"].filter(Boolean).join(" ");
+}
+
+function renderAgentChip(agent) {
+  const label = agent.state === "running"
+    ? agent.activity || "Démarrage"
+    : agent.description || agent.activity || agent.id;
+  return h(
+    "a",
+    {
+      class: agentClasses("agent-chip", agent),
+      href: agentHref(agent.id),
+      title: agent.description || null,
+      "aria-current": state.agentId === agent.id ? "true" : null,
+    },
+    h("span", { class: "agent-dot", "aria-hidden": "true" }),
+    h("span", { class: "agent-label" }, label),
+    renderAge(agent),
+  );
+}
+
+// Ages move on their own, between two writes of the transcript.
+function updateAges() {
+  for (const age of document.querySelectorAll(".agent-age[data-since]")) {
+    const { since, state: agentState } = age.dataset;
+    age.textContent = ageText(agentState, since);
+    age.closest(".agent-chip, .agent-status")?.classList.toggle("silent", isSilent(agentState, since));
+  }
+}
+
+function markCurrentChip() {
+  const current = state.agentId ? agentHref(state.agentId) : null;
+  for (const chip of el.board.querySelectorAll(".agent-chip")) {
+    chip.toggleAttribute("aria-current", false);
+    if (chip.getAttribute("href") === current) chip.setAttribute("aria-current", "true");
+  }
+}
+
+function clock(at) {
+  const date = new Date(at);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function renderEvent(event, agentRunning) {
+  const time = h("time", { class: "feed-time", datetime: event.at, title: new Date(event.at).toLocaleString("fr") }, clock(event.at));
+  if (event.kind === "message") {
+    return h("li", { class: "feed-item message" }, time, h("p", {}, h("span", { class: "feed-tool" }, "Consigne"), " ", event.label));
+  }
+  if (event.kind === "text") {
+    return h("li", { class: "feed-item text" }, time, h("p", {}, event.label));
+  }
+  const active = agentRunning && !event.done;
+  const classes = ["feed-item", "tool", active && "active", event.failed && "failed"].filter(Boolean).join(" ");
+  const label = event.label || "";
+  return h(
+    "li",
+    { class: classes },
+    time,
+    h(
+      "p",
+      {},
+      h("span", { class: "feed-tool" }, event.tool),
+      " ",
+      event.agent ? h("a", { href: agentHref(event.agent) }, label || event.agent) : label,
+      event.failed ? h("span", { class: "tag malformed" }, "échec") : null,
+    ),
+  );
+}
+
+function renderAgentHead(detail) {
+  const ticket = detail.ticket ? findTicket(detail.ticket) : null;
+  const facts = [detail.type, detail.model, detail.effort].filter(Boolean).join(" · ");
+  // A resumed worker can span a night: this is when it started, not how long it worked.
+  const started = new Date(detail.started);
+  const launched = Number.isNaN(started.getTime())
+    ? null
+    : h("span", {}, `· lancé le ${started.toLocaleString("fr", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`);
+  return h(
+    "header",
+    { class: "agent-head" },
+    h(
+      "div",
+      { class: "agent-head-bar" },
+      detail.parent ? h("a", { href: agentHref(detail.parent) }, "← Agent parent") : null,
+      ticket ? h("a", { class: "mono", href: docHref(ticket.path) }, ticket.id) : detail.parent ? null : h("span", {}, "Hors ticket"),
+      h("a", { class: "agent-close", href: "#/board", "aria-label": "Fermer le panneau" }, "✕"),
+    ),
+    h("h2", { class: "agent-title" }, detail.description || detail.id),
+    facts ? h("p", { class: "agent-facts mono" }, facts) : null,
+    h("p", { class: agentClasses("agent-status", detail) }, h("span", { class: "agent-dot", "aria-hidden": "true" }), renderAge(detail), launched),
+  );
+}
+
+function renderAgentDetail(detail) {
+  const running = detail.state === "running";
+  const body = detail.events.length
+    ? h("ol", { class: "feed" }, detail.events.map((event) => renderEvent(event, running)))
+    : h("p", { class: "agent-note" }, running
+      ? "L'agent démarre."
+      : "Détail indisponible : ce transcript n'a pas pu être lu. Le format de Claude Code a peut-être changé.");
+  el.agentPanel.replaceChildren(renderAgentHead(detail), body);
+}
+
+function renderOtherAgents() {
+  const others = state.agents.filter((agent) => !agent.ticket);
+  el.agentPanel.replaceChildren(
+    h(
+      "header",
+      { class: "agent-head" },
+      h("div", { class: "agent-head-bar" }, h("a", { class: "agent-close", href: "#/board", "aria-label": "Fermer le panneau" }, "✕")),
+      h("h2", { class: "agent-title" }, "Agents hors ticket"),
+    ),
+    others.length
+      ? h("div", { class: "agent-list" }, others.map(renderAgentChip))
+      : h("p", { class: "agent-note" }, "Aucun agent hors ticket en ce moment."),
+  );
+}
+
+async function loadAgentPanel(isNavigation) {
+  const id = state.agentId;
+  el.agentPanel.hidden = !id;
+  if (!id) {
+    state.agentDetailText = "";
+    return;
+  }
+  if (id === OTHER_AGENTS) {
+    renderOtherAgents();
+    return;
+  }
+  let text;
+  try {
+    text = await fetchJSON(`/api/agents/${encodeURIComponent(id)}`);
+  } catch (error) {
+    if (error.status !== 404) throw error;
+    state.agentDetailText = "";
+    el.agentPanel.replaceChildren(
+      h("header", { class: "agent-head" }, h("div", { class: "agent-head-bar" }, h("a", { class: "agent-close", href: "#/board", "aria-label": "Fermer le panneau" }, "✕"))),
+      h("p", { class: "agent-note" }, "Cet agent n'existe plus."),
+    );
+    return;
+  }
+  // The answer may arrive after the panel moved to another agent.
+  if (state.agentId !== id || (text === state.agentDetailText && !isNavigation)) return;
+  state.agentDetailText = text;
+  const panel = el.agentPanel;
+  const scroll = panel.scrollTop;
+  const followed = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 48;
+  renderAgentDetail(JSON.parse(text));
+  panel.scrollTop = isNavigation || followed ? panel.scrollHeight : scroll;
+  if (isNavigation) panel.focus({ preventScroll: true });
+}
+
+async function loadAgents() {
+  const text = await fetchJSON("/api/agents");
+  if (text === state.agentsText) return;
+  state.agentsText = text;
+  state.agents = JSON.parse(text).agents;
+  if (state.board) {
+    renderBoard();
+    renderSummary();
+  }
+}
+
+async function refreshAgents() {
+  try {
+    await loadAgents();
+    if (parseRoute().view === "board") await loadAgentPanel(false);
+    setOffline(false);
+  } catch {
+    setOffline(true);
+  }
 }
 
 /* File tree */
@@ -413,11 +635,19 @@ function setNav(view) {
 async function route(isNavigation = true) {
   const current = parseRoute();
   setNav(current.view);
+  const closedAgent = state.agentId && !current.agent ? state.agentId : null;
+  state.agentId = current.view === "board" ? current.agent : null;
   try {
+    await loadAgents();
     await loadBoard();
     if (current.view === "board") {
       document.title = "ork";
       state.docPath = null;
+      markCurrentChip();
+      await loadAgentPanel(isNavigation);
+      if (closedAgent && isNavigation) {
+        el.board.querySelector(`a[href="${CSS.escape(agentHref(closedAgent))}"]`)?.focus();
+      }
     } else {
       await loadTree();
       let path = current.path;
@@ -454,6 +684,10 @@ NARROW.addEventListener("change", (event) => {
   el.treePanel.open = !event.matches;
 });
 window.addEventListener("hashchange", () => route(true));
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.agentId) location.hash = "#/board";
+});
+setInterval(updateAges, AGES_EVERY_MS);
 
 function listen() {
   const events = new EventSource("/api/events");
@@ -464,6 +698,7 @@ function listen() {
     lost = false;
   });
   events.addEventListener("changed", () => route(false));
+  events.addEventListener("agents", refreshAgents);
   events.addEventListener("error", () => {
     lost = true;
     setOffline(true);

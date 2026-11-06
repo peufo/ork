@@ -138,9 +138,12 @@ Un ouvrier qui rencontre une décision qui ne lui appartient pas **s'arrête** e
 `/ork:ui` ouvre dans ton navigateur une page locale, propre au dépôt :
 
 - **Tickets** : un kanban, une colonne par statut. Il se met à jour tout seul quand le chef écrit un ticket, et une carte qui vient de changer de colonne se signale brièvement. `blocked`, `plan-review` et `in-review` ressortent : ce sont eux qui t'attendent.
+- **Agents** : sur la carte d'un ticket, un bouton par agent au travail, avec ce qu'il fait en ce moment. S'il n'y en a aucun, le bouton montre le dernier passage. Un clic ouvre son fil d'activité, mis à jour en direct : une ligne par action, les sous-agents, et son rapport. Un agent sans ticket apparaît dans l'en-tête. La page dit « silencieux depuis… » après 5 minutes sans écriture, et « interrompu » après une heure.
 - **Documents** : tous les Markdown de `doc/`, avec leurs liens, et les captures d'écran citées dans les tickets.
 
 Elle ne fait que lire : elle n'a aucune route d'écriture, et le chef reste le seul à écrire dans `doc/tickets/`. Elle écoute seulement sur `127.0.0.1`.
+
+Le fil d'activité lit les transcripts que Claude Code écrit sous `~/.claude/projects/<dépôt>/` (ou `$CLAUDE_CONFIG_DIR`). C'est la seule lecture hors de `doc/`, et la micro-app ne rend ni les résultats d'outils, ni le contenu des fichiers. Une commande sans description s'affiche telle quelle. La doc de Claude Code donne l'emplacement de ces fichiers, mais ne garantit pas leur format : si une mise à jour le change, l'agent reste affiché, sans son détail. Les sessions lancées depuis un worktree ne sont pas lues.
 
 **Rien à installer.** Au premier usage d'une version d'ork, `scripts/ork-app.sh` télécharge le binaire de ta plateforme (macOS ou Linux, arm64 ou amd64) depuis les releases GitHub, vérifie sa somme de contrôle et le garde dans `~/.cache/ork/`. Cette somme vit dans la même release : elle protège d'un téléchargement corrompu, pas d'une release compromise. Le serveur tourne en arrière-plan, et ses seules traces dans le projet sont `ork-app.json` et `ork-app.log` dans le dossier `.git`.
 
@@ -155,8 +158,7 @@ sh ~/.claude/skills/ork/scripts/ork-app.sh --stop    # pour l'arrêter
 
 ```bash
 golangci-lint run && go test -race ./...
-go build -o /tmp/ork-app .
-ORK_APP_BIN=/tmp/ork-app sh ../scripts/ork-app.sh --repo <projet> --open
+sh run.sh <projet>    # compile, puis ouvre l'app sur ce projet ; Ctrl-C pour l'arrêter
 ```
 
 **Pour publier une version** : passe `version` à la nouvelle valeur dans `.claude-plugin/plugin.json`, commite, puis pousse le tag `v<version>` correspondant. Le workflow `release.yml` vérifie le tout et publie les binaires. Entre le commit et la fin du workflow, `/ork:ui` ne trouve pas encore le binaire et le dit.

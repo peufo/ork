@@ -53,6 +53,12 @@ func (h *hub) broadcast() {
 	}
 }
 
+func (h *hub) subscriberCount() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return len(h.subscribers)
+}
+
 func (h *hub) close() {
 	h.closeOnce.Do(func() { close(h.closed) })
 }

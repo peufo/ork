@@ -25,24 +25,31 @@ const eventsHeartbeat = 25 * time.Second
 // server is read-only: it has no route that writes, and the lead stays the only
 // writer of doc/tickets/.
 type server struct {
-	repo   repoInfo
-	store  *docStore
-	render *renderer
-	hub    *hub
-	port   int
-	mux    *http.ServeMux
+	repo     repoInfo
+	store    *docStore
+	agents   *agentStore
+	render   *renderer
+	hub      *hub
+	agentHub *hub
+	port     int
+	mux      *http.ServeMux
 }
 
-func newServer(repo repoInfo, store *docStore, h *hub, port int) (*server, error) {
+func newServer(repo repoInfo, store *docStore, agents *agentStore, h, agentHub *hub, port int) (*server, error) {
 	web, err := fs.Sub(webFiles, "web")
 	if err != nil {
 		return nil, err
 	}
-	s := &server{repo: repo, store: store, render: newRenderer(store), hub: h, port: port, mux: http.NewServeMux()}
+	s := &server{
+		repo: repo, store: store, agents: agents, render: newRenderer(store),
+		hub: h, agentHub: agentHub, port: port, mux: http.NewServeMux(),
+	}
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
 	s.mux.HandleFunc("GET /api/tree", s.handleTree)
 	s.mux.HandleFunc("GET /api/doc", s.handleDoc)
 	s.mux.HandleFunc("GET /api/tickets", s.handleTickets)
+	s.mux.HandleFunc("GET /api/agents", s.handleAgents)
+	s.mux.HandleFunc("GET /api/agents/{id}", s.handleAgent)
 	s.mux.HandleFunc("GET /api/events", s.handleEvents)
 	s.mux.HandleFunc("GET /raw/{path...}", s.handleRaw)
 	s.mux.Handle("GET /", http.FileServerFS(web))
@@ -130,6 +137,19 @@ func (s *server) handleTickets(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, buildBoard(s.store.loadTickets()))
 }
 
+func (s *server) handleAgents(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, s.agents.list(s.store.loadTickets()))
+}
+
+func (s *server) handleAgent(w http.ResponseWriter, r *http.Request) {
+	detail, ok := s.agents.detail(r.PathValue("id"), s.store.loadTickets())
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	writeJSON(w, detail)
+}
+
 func (s *server) handleRaw(w http.ResponseWriter, r *http.Request) {
 	rel := r.PathValue("path")
 	contentType, ok := imageType(rel)
@@ -166,6 +186,8 @@ func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	}
 	changes := s.hub.subscribe()
 	defer s.hub.unsubscribe(changes)
+	agentChanges := s.agentHub.subscribe()
+	defer s.agentHub.unsubscribe(agentChanges)
 	heartbeat := time.NewTicker(eventsHeartbeat)
 	defer heartbeat.Stop()
 	for {
@@ -177,6 +199,8 @@ func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		case <-changes:
 			message = "event: changed\ndata: {}\n\n"
+		case <-agentChanges:
+			message = "event: agents\ndata: {}\n\n"
 		case <-heartbeat.C:
 			message = ": heartbeat\n\n"
 		}

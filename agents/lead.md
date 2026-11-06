@@ -241,7 +241,7 @@ En cas de doute entre deux lignes, prends la plus haute : un ouvrier sous-dimens
 3. la `integration_branch`, la commande de tests et les notes utiles de `doc/ork.md` ;
 4. en EXECUTION MODE, la ligne `AUTO REVIEW: <commands>` si `auto_review` est configuré.
 
-Note dans le ticket l'identifiant de l'agent (`agent:`) dès que tu l'as, et passe le statut à `planning` ou `in-progress`.
+Fais commencer la `description` du lancement par l'identifiant du ticket (`t38 plan identité visuelle`) : la micro-app s'en sert pour afficher l'agent sur sa carte. Note dans le ticket l'identifiant de l'agent (`agent:`) dès que tu l'as, et passe le statut à `planning` ou `in-progress`.
 
 ## 4. Quand un ouvrier rend compte
 

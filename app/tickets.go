@@ -152,6 +152,7 @@ type ticket struct {
 	DependsOn []string `json:"dependsOn"`
 	Waiting   []string `json:"waiting"`
 	Malformed bool     `json:"malformed"`
+	Agent     string   `json:"-"`
 	column    string
 }
 
@@ -173,6 +174,7 @@ func newTicket(rel, content string, inDone bool) ticket {
 		DependsOn: fieldList(fields, "depends_on"),
 		Waiting:   []string{},
 		Malformed: !ok,
+		Agent:     fieldValue(fields, "agent"),
 	}
 	if t.DependsOn == nil {
 		t.DependsOn = []string{}
