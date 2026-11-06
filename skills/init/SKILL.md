@@ -18,7 +18,7 @@ $ARGUMENTS
 | `.ork/tickets/done/` | les tickets terminés |
 | `<docs_dir>/story/` | les stories, une par fichier |
 
-`.ork/` appartient à ork. La documentation du projet, stories comprises, reste dans son propre dossier : `docs_dir`, `doc/` par défaut. La micro-app n'affiche que ces deux dossiers.
+`.ork/` appartient à ork. La documentation du projet, stories comprises, reste dans son propre dossier : `docs_dir`, `doc/` par défaut.
 
 Ce qui est propre au projet ne va pas dans `.ork/config.md`, mais dans le `CLAUDE.md` du dépôt, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés, vérifications supplémentaires, style de commit. `.ork/config.md` ne garde que la configuration d'ork et les écarts aux conventions.
 
@@ -137,4 +137,4 @@ En six lignes au plus :
 - les dossiers renommés et le nombre de références mises à jour (ou la note ajoutée) ;
 - ce qui a été ajouté à `CLAUDE.md` et ce qui a été supprimé, ainsi que les réglages ajoutés ;
 - les tickets créés, s'il y en a ;
-- la suite : si tu as ajouté `outputStyle`, ouvrir une nouvelle session sans worktree ; si `docs_dir` a changé alors que la micro-app tourne, la relancer, car elle ne lit cette clé qu'au démarrage ; puis une remarque ou une story pour commencer. La micro-app reste facultative : `/ork:ui` si le développeur veut le kanban.
+- la suite : si tu as ajouté `outputStyle`, ouvrir une nouvelle session sans worktree ; puis une remarque ou une story pour commencer.

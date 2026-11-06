@@ -15,9 +15,8 @@ ork ne refait pas ce que l'app sait déjà faire (terminal, navigateur, fichiers
 | `output-styles/ork.md` | Le rôle du chef. Il s'ajoute au prompt par défaut de Claude Code, sans le remplacer. |
 | `agents/worker.md` | L'ouvrier : exécute un ticket dans un worktree isolé, tient ce ticket à jour et rend un rapport très court. |
 | `agents/critic.md` | Le contre-lecteur : relit une story à froid et rend trois objections au plus. |
-| `skills/` | Les procédures, chargées à la demande : `init`, `status`, `ticket`, `ideation`, `dispatch`, `review`, `integrate`, `stop`, `ui`. |
+| `skills/` | Les procédures, chargées à la demande : `init`, `status`, `ticket`, `ideation`, `dispatch`, `review`, `integrate`, `stop`. |
 | `hooks/` | Le mod d'affichage : badges, carte de sujet, boutons et panneau d'état. |
-| `app/`, `scripts/ork-app.sh` | La micro-app, un bonus facultatif (voir plus bas). |
 
 Dans le dépôt de ton projet, il n'y a que des données en Markdown :
 
@@ -91,44 +90,22 @@ Le chef écrit du texte au même format, et le mod l'affiche sans modifier le me
 
 Si le mod ne reconnaît pas un texte, ou s'il cesse de fonctionner, le texte s'affiche normalement. Son API est en accès anticipé et peut changer d'une version de Claude Code à l'autre.
 
-## Bonus : la micro-app
-
-Facultative : rien dans le pilotage n'en dépend. `/ork:ui` ouvre dans le navigateur de l'app une page locale, propre au dépôt :
-
-- **Tickets** : un kanban, une colonne par statut, mis à jour tout seul quand le chef écrit un ticket.
-- **Agents** : sur la carte d'un ticket, un bouton par agent au travail, avec son fil d'activité en direct. Un agent sans ticket apparaît dans l'en-tête.
-- **Documents** : tous les Markdown de `.ork/` et de `docs_dir`, avec leurs liens et les captures citées dans les tickets.
-
-Elle ne fait que lire et n'écoute que sur `127.0.0.1`. Le fil d'activité lit les transcripts sous `~/.claude/projects/<dépôt>/`. La doc de Claude Code ne garantit pas leur format : si une mise à jour le change, l'agent reste affiché, sans son détail. Les sessions lancées depuis un worktree ne sont pas lues.
-
-Au premier usage d'une version d'ork, `scripts/ork-app.sh` télécharge le binaire de ta plateforme (macOS ou Linux, arm64 ou amd64) depuis les releases GitHub, vérifie sa somme de contrôle et le garde dans `~/.cache/ork/`. Cette somme vit dans la même release : elle protège d'un téléchargement corrompu, pas d'une release compromise. Ses seules traces dans le projet sont `ork-app.json` et `ork-app.log`, dans le dossier `.git`.
-
 ## Développer
 
-**Le mod**, depuis la racine :
+Depuis la racine :
 
 ```bash
 claude plugin validate . && claude plugin test .
 ```
 
-**La micro-app** (il faut Go et `golangci-lint`), depuis `app/` :
-
-```bash
-golangci-lint run && go test -race ./...
-```
-
-```bash
-sh run.sh <projet>
-```
-
-**Publier une version** : passe `version` à la nouvelle valeur dans `.claude-plugin/plugin.json`, commite, puis pousse le tag `v<version>`. Le workflow `release.yml` publie les binaires. Entre le commit et la fin du workflow, `/ork:ui` ne trouve pas encore le binaire et le dit.
+**Publier une version** : passe `version` à la nouvelle valeur dans `.claude-plugin/plugin.json`, commite, puis pousse le tag `v<version>`.
 
 ## Ce qu'il faut savoir
 
 - **Le chef n'a pas de verrou** : « je ne lis jamais de code » est une consigne. Si tu lui demandes de modifier une ligne, il le fait et te signale la règle contournée.
 - **Seul le dernier message d'un tour s'affiche tel quel.** L'app résume le texte écrit avant un appel d'outil, c'est pourquoi le chef écrit ses lignes d'état à la fin du tour.
 - **Le worktree d'un ouvrier part de la branche par défaut du dépôt.** L'ouvrier s'aligne d'abord sur `integration_branch`, et seul ce qui y est **commité** lui parvient.
-- **Les tickets ne sont écrits que par le chef**, dans le dépôt principal. Les ouvriers reçoivent le ticket recopié dans leur message.
+- **Les tickets vivent dans le dépôt principal.** Le chef les crée et y note les décisions. Chaque ouvrier reçoit le chemin du sien et le met à jour lui-même.
 - **Les agents d'un plugin ignorent** les champs `permissionMode`, `hooks` et `mcpServers`.
 - **Coût** : plusieurs ouvriers en parallèle consomment ta limite plus vite. Un ouvrier coupé par la limite ne reprend pas de lui-même : le chef le signale et propose de le reprendre, avec tout son historique.
 

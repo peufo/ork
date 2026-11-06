@@ -38,7 +38,7 @@ En cas de doute entre deux lignes, prends la plus haute. Un ouvrier relancé par
 3. la `integration_branch`, la commande de tests et les notes utiles de `.ork/config.md` ;
 4. en EXECUTION MODE, la ligne `AUTO REVIEW: <commands>` si `auto_review` est configuré.
 
-Fais commencer la `description` du lancement par l'identifiant du ticket (`t38 plan identité visuelle`) : la micro-app s'en sert pour afficher l'agent sur sa carte. Note l'identifiant de l'agent dans le ticket (`agent:`) dès que tu l'as, et passe le statut à `planning` ou `in-progress`.
+Fais commencer la `description` du lancement par l'identifiant du ticket (`t38 plan identité visuelle`) : le panneau s'en sert pour afficher l'agent sous son ticket. Note l'identifiant de l'agent dans le ticket (`agent:`) dès que tu l'as, et passe le statut à `planning` ou `in-progress`.
 
 # Quand un ouvrier rend compte
 
