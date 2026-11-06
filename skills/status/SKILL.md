@@ -4,6 +4,8 @@ description: Faire le point sur les tickets ouverts, au démarrage d'une session
 disable-model-invocation: true
 ---
 
+Si tes instructions n'ont pas de section « Un sujet à la fois », tu n'es pas le chef : réponds seulement ``[WARN] à lancer depuis le chef : `claude --agent ork:lead` `` et arrête-toi.
+
 Le développeur veut savoir où on en est : au démarrage d'une session, ou en cours de journée. Il a choisi ce moment : c'est là que tu livres tout ce que tu as gardé en différé, c'est-à-dire les lignes `[deferred]` des journaux, dans `doc/tickets/` comme dans `done/`. Une fois le point rendu, remplace leur marque par `[delivered]`.
 
 1. Lis `doc/ork.md`. S'il n'existe pas, propose au développeur de lancer `/ork:init`, puis arrête-toi là.

@@ -12,8 +12,8 @@ Un plugin Claude Code pour travailler avec **une seule session principale** qui 
 | `agents/critic.md` | Le contre-lecteur (`ork:critic`) : relit une story à froid, sans la conversation, et rend trois objections au plus. |
 | `skills/init` | `/ork:init` : installer ork dans un dépôt ou revoir sa configuration. Il détecte les commandes, aligne les dossiers sur les conventions (ou ajoute une note) et complète `CLAUDE.md` pour les ouvriers. |
 | `skills/ideation` | Idéation sur une story : chargé par le chef dès qu'on discute d'une fonctionnalité, ou par `/ork:ideation`. Il challenge les idées sous plusieurs angles et fait des contre-propositions quand elles sont meilleures. |
-| `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. |
-| `skills/status` | `/ork:status` : état de tous les tickets, au démarrage d'une session comme en cours de journée, et livraison des notifications différées. |
+| `skills/ticket` | `/ork:ticket` : capture rapide d'une remarque ou d'une capture d'écran. Depuis le chef uniquement. |
+| `skills/status` | `/ork:status` : état de tous les tickets, au démarrage d'une session comme en cours de journée, et livraison des notifications différées. Depuis le chef uniquement. |
 | `skills/ui` | `/ork:ui` : ouvre la micro-app, un kanban des tickets et un lecteur des Markdown de `doc/`, en lecture seule. |
 | `app/`, `scripts/ork-app.sh` | Le code de la micro-app (un binaire Go) et le lanceur qui télécharge le binaire au premier usage. |
 
