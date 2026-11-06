@@ -25,9 +25,10 @@ Ce qui est propre au projet ne va pas dans `doc/ork.md`, mais dans le `CLAUDE.md
 - Si `doc/ork.md` existe, tu es en **révision** : lis-le, et ne propose ensuite que les écarts entre ce fichier et ce que tu détectes.
 - Sinon, c'est une **installation**.
 - Note la branche courante et `git status --short`. Ne touche pas aux modifications que tu y trouves.
-- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches deux réglages :
+- Lis `.claude/settings.json` et `.claude/settings.local.json` s'ils existent. Tu y cherches trois réglages :
   - `"agent": "ork:lead"` : le chef devient la session par défaut du projet ;
-  - `"permissions": { "deny": ["Agent(fork)"] }` : un filet de sécurité contre les forks, qui héritent de toute la conversation du chef.
+  - `"permissions": { "deny": ["Agent(fork)"] }` : un filet de sécurité contre les forks, qui héritent de toute la conversation du chef ;
+  - `"statusLine": { "type": "command", "command": "sh ${CLAUDE_PLUGIN_ROOT}/scripts/statusline.sh" }` : ce qui attend le développeur dans les tickets, toujours visible dans le terminal. Elle demande `jq`. Si une autre `statusLine` existe, ne la remplace pas : signale-la. Regarde aussi `~/.claude/settings.json`, où elle a pu être posée pour tous les projets.
 
 # 2. Enquête
 

@@ -106,6 +106,17 @@ Toujours dans `.claude/settings.local.json` du projet, ou dans `~/.claude/settin
 
 Ce réglage empêche Claude de « forker » la conversation, car un fork hérite de toute la conversation de l'orchestrateur. Le prompt du chef l'interdit déjà, ceci n'est qu'un filet de sécurité.
 
+Dans le terminal, la status line montre en permanence ce qui attend le développeur dans les tickets (`ork · ⏸ bloqué : t14 · 👀 2 à relire · ⚙ 1 en cours`). Un plugin ne peut pas la fournir : ajoute-la à tes réglages, ou accepte la proposition de `/ork:init`. Elle demande `jq`, et n'affiche rien hors d'un dépôt qui contient `doc/ork.md`, donc `~/.claude/settings.json` lui convient :
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "sh ~/.claude/skills/ork/scripts/statusline.sh"
+  }
+}
+```
+
 Le chef peut reprendre seul après la limite d'usage de ton abonnement. Quand la limite tombe, Claude Code affiche un menu : choisis d'attendre le reset, et la session reprend la tâche interrompue. Ce comportement dépend du réglage **« Continue automatically at usage limit »** du `/config` du terminal (absent des réglages de l'extension VS Code). Ce réglage est actif par défaut. Ce n'est pas un réglage du plugin. Il faut que la session reste ouverte (pas de terminal fermé ni de Mac en veille) et qu'elle soit connectée avec un abonnement claude.ai, pas avec une clé API. Une demande d'autorisation peut encore la mettre en pause, et Échap annule l'attente.
 
 Pour le mode de permission, le mode **auto** (une fois validé dans ton environnement) évite que chaque commande d'un ouvrier vienne te demander une approbation. Les sous-agents héritent du mode de la session principale. En mode manuel, les demandes d'autorisation des ouvriers en arrière-plan remontent dans la session du chef, avec le nom de l'ouvrier qui demande.
