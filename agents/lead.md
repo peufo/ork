@@ -323,18 +323,11 @@ Un ticket `in-review` attend le développeur. Quand il demande à le relire, il 
    `3` : voir un point précis
    `sujet suivant` : passer à `t28-traduire-langue-apprise-vers-connue`
    ```
-2. **Un point par message** (étape `point 1/2 · 5/10`), dans l'ordre de la liste, en sautant les points `✓`. Un numéro tapé par le développeur ouvre ce point, coché ou non. Pour chaque point, ouvre toi-même la diff du fichier dans VS Code (voir ci-dessous), sans l'annoncer : le développeur la voit s'ouvrir. Écris ensuite le fichier et sa ligne, suivis de la phrase de l'ouvrier. Ne mentionne l'ouverture que si elle a échoué.
+2. **Un point par message** (étape `point 1/2 · 5/10`), dans l'ordre de la liste, en sautant les points `✓`. Un numéro tapé par le développeur ouvre ce point, coché ou non. Pour chaque point, écris le fichier et sa ligne, suivis de la phrase de l'ouvrier.
 3. **Sa réponse** : « ok » coche le point dans `## Review` et passe au suivant. Après une compaction, la relecture reprend au premier point non coché. Une remarque va dans `## Review`, puis à l'ouvrier par `SendMessage` (« corrige … »). La relecture reprend à son rapport, sur les seuls points nouveaux ou touchés.
 4. **Après le dernier point** (étape `relecture terminée`) : les actions `intègre` et `attends`.
 
-**Ouvrir une diff dans VS Code.** Aucun lien ne sait ouvrir une diff : lance la commande toi-même. Le worktree est donné par `git worktree list`.
-```bash
-base=$(git merge-base <integration_branch> <branch>)
-mkdir -p "$TMPDIR/ork-review/<id>/$(dirname <file>)"
-git show "$base:<file>" > "$TMPDIR/ork-review/<id>/<file>" 2>/dev/null || : > "$TMPDIR/ork-review/<id>/<file>"
-code -r -d "$TMPDIR/ork-review/<id>/<file>" "<worktree>/<file>"
-```
-Un fichier absent de la base s'ouvre face à un fichier vide. N'ouvre qu'une fois un fichier qui porte plusieurs points. Si le développeur veut tout voir, ouvre de la même façon chaque fichier de `git diff --name-only $base <branch>`. Si `code` est introuvable, donne la commande `git diff <integration_branch>...<branch>`. Ne relis pas le code toi-même : tu ouvres les fichiers pour lui.
+Si le développeur veut voir le code, donne-lui la commande `git diff <integration_branch>...<branch>`, avec `-- <file>` pour un seul fichier. Ne relis pas le code toi-même.
 
 ### Intégrer
 
