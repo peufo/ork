@@ -17,6 +17,9 @@ const START_SKILL = 'ork:start'
 const START_PROMPT = 'démarre ork'
 const STOP_PROMPT = 'arrête-toi au prochain état stable'
 const HEALTH_PERIOD_MS = 15_000
+// The variation selector keeps them plain glyphs, not coloured emoji.
+const PAUSED_ICON = '⏸\uFE0E'
+const BLOCKED_ICON = '⛓\uFE0E'
 
 const boardAtom = atom({ plugin: 'ork', key: 'board' } as const, null)
 const healthAtom = atom({ plugin: 'ork', key: 'health' } as const, null)
@@ -309,12 +312,10 @@ export const register: Register = on => {
       />
     )
     const agents = Object.entries(activity).map(([key, agent]) => ({ key, ...agent }))
-    // A board kept from before a reload may not have this section yet.
-    const paused = board.paused ?? []
     const others = agents.filter(
       agent =>
         agent.ticket === null ||
-        ![...board.waiting, ...board.running, ...board.queued, ...board.ideas, ...paused].some(
+        ![...board.waiting, ...board.running, ...board.queued, ...board.ideas].some(
           row => row.id === agent.ticket,
         ),
     )
@@ -340,6 +341,8 @@ export const register: Register = on => {
                 <Box flexDirection="row" columnGap={1} alignItems="center">
                   <Markdown text={`[${row.id}](${TICKETS_DIR}/${row.file})`} />
                   {focused && <Text color="suggestion">●</Text>}
+                  {row.isPaused && <Text dimColor>{PAUSED_ICON}</Text>}
+                  {row.isBlocked && <Text dimColor>{BLOCKED_ICON}</Text>}
                   <Box flexGrow={1} />
                   {row.note !== undefined && <Text dimColor>{row.note}</Text>}
                   {action && actionButton(action)}
@@ -360,7 +363,6 @@ export const register: Register = on => {
         board.running.length +
         board.queued.length +
         board.ideas.length +
-        paused.length +
         others.length ===
       0
 
@@ -378,7 +380,6 @@ export const register: Register = on => {
         )}
         {section('Prêts', board.queued)}
         {section('Idées', board.ideas)}
-        {section('En pause', paused)}
         {!board.isStopping && agents.length + board.running.length > 0 && (
           <Button
             key="stop"

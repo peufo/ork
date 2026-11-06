@@ -206,7 +206,7 @@ test('the panel puts an alert on its ticket, and git at the end', async ($, on) 
   await ui.unmount()
 })
 
-test('the panel shows the paused tickets and their reason', async ($, on) => {
+test('the panel marks paused and blocked tickets beside their id', async ($, on) => {
   const submitted: string[] = []
   on('prompt.submit', (_, e) => {
     submitted.push(e.text)
@@ -218,14 +218,18 @@ test('the panel shows the paused tickets and their reason', async ($, on) => {
         e.key === 'board'
           ? {
               ...BOARD,
-              paused: [
+              ideas: [
                 {
                   file: 't30-a.md',
                   id: 't30',
                   title: 'Importer',
+                  isPaused: true,
                   reason: "jusqu'à t34",
                   action: { label: 'reprendre', text: 'sors t30 de la pause' },
                 },
+              ],
+              queued: [
+                { file: 't31-a.md', id: 't31', title: 'Attendre', isBlocked: true, note: 'attend t30' },
               ],
             }
           : e.key === 'activity'
@@ -237,8 +241,11 @@ test('the panel shows the paused tickets and their reason', async ($, on) => {
 
   const ui = await $.ui.mount(PANE)
 
-  expect((await ui.find({ type: 'Text', text: /En pause/ }))?.text).toBe('En pause (1)')
+  expect(await ui.find({ type: 'Text', text: /⏸/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /⛓/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /En pause/ })).toBeUndefined()
   expect((await ui.find({ type: 'Text', text: /jusqu'à t34/ }))?.text).toBe("jusqu'à t34")
+  expect((await ui.find({ type: 'Text', text: /attend t30/ }))?.text).toBe('attend t30')
   await ui.press({ key: 'sors t30 de la pause' })
   expect(submitted).toEqual(['sors t30 de la pause'])
   await ui.unmount()

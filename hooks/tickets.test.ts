@@ -49,31 +49,58 @@ test('puts what waits for the developer first, by urgency', () => {
   expect(board.waiting[3]?.action).toEqual({ label: 'relire', text: 'relisons t3' })
 })
 
-test('sets a paused ticket apart, with its reason, and it no longer waits for anyone', () => {
+test('marks a paused ticket in its section, after those that can go', () => {
   const board = buildBoard([
     ticket('t1', 'idea', { paused: "jusqu'à t3" }),
     ticket('t2', 'ready', { paused: 'plus tard' }),
     ticket('t3', 'idea'),
   ])
 
-  expect(board.ideas.map(row => row.id)).toEqual(['t3'])
-  expect(board.queued).toEqual([])
-  expect(board.paused).toEqual([
-    {
-      file: 't1-a.md',
-      id: 't1',
-      title: 'Titre t1',
-      reason: "jusqu'à t3",
-      action: { label: 'reprendre', text: 'sors t1 de la pause' },
-    },
-    {
-      file: 't2-a.md',
-      id: 't2',
-      title: 'Titre t2',
-      reason: 'plus tard',
-      action: { label: 'reprendre', text: 'sors t2 de la pause' },
-    },
+  expect(board.ideas.map(row => row.id)).toEqual(['t3', 't1'])
+  expect(board.ideas[1]).toEqual({
+    file: 't1-a.md',
+    id: 't1',
+    title: 'Titre t1',
+    isPaused: true,
+    reason: "jusqu'à t3",
+    action: { label: 'reprendre', text: 'sors t1 de la pause' },
+  })
+  expect(board.queued[0]?.isPaused).toBe(true)
+  expect(board.queued[0]?.action).toEqual({ label: 'reprendre', text: 'sors t2 de la pause' })
+  expect(board.ideas[0]?.isPaused).toBeUndefined()
+})
+
+test('marks a ticket that waits for an open dependency, not one closed', () => {
+  const board = buildBoard([
+    ticket('t1', 'blocked'),
+    ticket('t2', 'ready', { dependsOn: ['t1'] }),
+    ticket('t3', 'idea', { dependsOn: ['t1', 't99'] }),
+    ticket('t4', 'ready', { dependsOn: ['t99'] }),
   ])
+
+  expect(board.queued[0]).toEqual({
+    file: 't2-a.md',
+    id: 't2',
+    title: 'Titre t2',
+    isBlocked: true,
+    note: 'attend t1',
+  })
+  expect(board.ideas[0]?.isBlocked).toBe(true)
+  expect(board.ideas[0]?.note).toBe('attend t1')
+  expect(board.ideas[0]?.action).toEqual({ label: 'clarifier', text: 'clarifions t3' })
+  expect(board.queued[1]?.isBlocked).toBeUndefined()
+  expect(board.queued[1]?.action).toEqual({ label: 'lancer', text: 'lance t4' })
+})
+
+test('a ticket can be both paused and waiting', () => {
+  const [row] = buildBoard([
+    ticket('t1', 'blocked'),
+    ticket('t2', 'ready', { dependsOn: ['t1'], paused: 'plus tard' }),
+  ]).queued
+
+  expect(row?.isPaused).toBe(true)
+  expect(row?.isBlocked).toBe(true)
+  expect(row?.action?.label).toBe('reprendre')
 })
 
 test('keeps in sight a ticket under way or waiting, whatever its field says', () => {
@@ -83,8 +110,8 @@ test('keeps in sight a ticket under way or waiting, whatever its field says', ()
   ])
 
   expect(board.waiting.map(row => row.id)).toEqual(['t1'])
+  expect(board.waiting[0]?.isPaused).toBeUndefined()
   expect(board.running.map(row => row.id)).toEqual(['t2'])
-  expect(board.paused).toEqual([])
 })
 
 test('says when a clean stop is under way', () => {

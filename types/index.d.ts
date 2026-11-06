@@ -4,6 +4,8 @@ export type BoardRow = {
   title: string
   note?: string
   reason?: string
+  isPaused?: boolean
+  isBlocked?: boolean
   action?: { label: string; text: string }
 }
 
@@ -45,7 +47,6 @@ export type Board = {
   running: readonly BoardRow[]
   queued: readonly BoardRow[]
   ideas: readonly BoardRow[]
-  paused: readonly BoardRow[]
 }
 
 declare module 'claude-code' {

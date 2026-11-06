@@ -146,12 +146,30 @@ export function subjectQueue(tickets: readonly TicketHead[]): TicketHead[] {
     .sort(byUrgency)
 }
 
+/** What a row says of a ticket that can't go yet. Comes last: a paused ticket offers only to resume. */
+function holdFields(ticket: TicketHead, tickets: readonly TicketHead[]): Partial<BoardRow> {
+  const blockers = openBlockers(ticket, tickets)
+
+  return {
+    ...(blockers.length > 0 && { isBlocked: true, note: `attend ${blockers.join(', ')}` }),
+    ...(isPaused(ticket) && {
+      isPaused: true,
+      reason: ticket.paused,
+      action: { label: 'reprendre', text: `sors ${ticket.id} de la pause` },
+    }),
+  }
+}
+
 /** Sorts the open tickets into what the panel shows. */
 export function buildBoard(tickets: readonly TicketHead[], isStopping = false): Board {
   const sorted = [...tickets].sort(byUrgency)
-  const active = sorted.filter(ticket => !isPaused(ticket))
+  // Within a section, what can go comes before what is set aside.
+  const ordered = [
+    ...sorted.filter(ticket => !isPaused(ticket)),
+    ...sorted.filter(ticket => isPaused(ticket)),
+  ]
   const withStatus = (...statuses: string[]) =>
-    active.filter(ticket => statuses.includes(ticket.status))
+    ordered.filter(ticket => statuses.includes(ticket.status))
 
   return {
     isStopping,
@@ -170,21 +188,17 @@ export function buildBoard(tickets: readonly TicketHead[], isStopping = false): 
       ...row(ticket),
       note: ticket.status === 'planning' ? 'plan' : 'exécution',
     })),
-    queued: withStatus('ready').map(ticket => {
-      const blockers = openBlockers(ticket, tickets)
-
-      return blockers.length > 0
-        ? { ...row(ticket), note: `attend ${blockers.join(', ')}` }
-        : { ...row(ticket), action: { label: 'lancer', text: `lance ${ticket.id}` } }
-    }),
+    queued: withStatus('ready').map(ticket => ({
+      ...row(ticket),
+      ...(openBlockers(ticket, tickets).length === 0 && {
+        action: { label: 'lancer', text: `lance ${ticket.id}` },
+      }),
+      ...holdFields(ticket, tickets),
+    })),
     ideas: withStatus('idea').map(ticket => ({
       ...row(ticket),
       action: { label: 'clarifier', text: `clarifions ${ticket.id}` },
-    })),
-    paused: sorted.filter(isPaused).map(ticket => ({
-      ...row(ticket),
-      reason: ticket.paused,
-      action: { label: 'reprendre', text: `sors ${ticket.id} de la pause` },
+      ...holdFields(ticket, tickets),
     })),
   }
 }
