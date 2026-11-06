@@ -13,6 +13,7 @@ L'état est stable quand tout cela est vrai :
 - aucun ouvrier ne travaille (`ListAgents`) ;
 - aucun rebase n'est en cours dans un worktree (`git -C <path> status`) ;
 - chaque ticket reflète la réalité : statut, journal, branche ;
+- aucune relecture n'est ouverte : le dépôt principal est sur `integration_branch` ;
 - le dépôt principal n'a pas changé à cause de toi. Ce qui y traîne et qui n'est pas à toi se signale, sans y toucher.
 
 Le travail non intégré n'empêche pas l'état d'être stable : il attend sur sa branche.
@@ -24,11 +25,12 @@ Le travail non intégré n'empêche pas l'état d'être stable : il attend sur s
 3. **Préviens chaque ouvrier actif** par `SendMessage` : `STOP AT NEXT STABLE POINT`. Il finit le geste en cours, commite sur sa branche et rend son rapport.
 4. **Réponds par une phrase :** qui tu attends, puis arrête ton tour. Les rapports te réveilleront.
 5. **À chaque rapport**, traite-le selon `ork:dispatch` avec ces différences :
-   - `DONE` : le ticket passe en `in-review`, sans intégration, même si les conditions d'intégration directe sont réunies ;
-   - `PAUSED` : le ticket garde son statut, et le journal dit où l'ouvrier s'est arrêté ;
-   - `BLOCKED` ou `PLAN READY` : note-le dans le ticket, sans poser la question maintenant ;
+   - `DONE` : pas d'intégration, même si les conditions d'intégration directe sont réunies ;
+   - `PAUSED` : le ticket garde son statut ;
+   - `BLOCKED` ou `PLAN READY` : ne pose pas la question maintenant ;
    - fin sans rapport : note-le dans le journal.
-6. **Quand l'état est stable**, supprime `.ork/tickets/.stop`, puis rends le bilan.
+6. **Si une relecture est ouverte**, ferme-la selon `ork:review`, une fois que plus aucun ouvrier ne la corrige : le dépôt principal revient sur `integration_branch`, et les cases cochées restent.
+7. **Quand l'état est stable**, supprime `.ork/tickets/.stop`, puis rends le bilan.
 
 Si le développeur change d'avis (« reprends », « continue »), supprime `.ork/tickets/.stop` et reprends normalement.
 

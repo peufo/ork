@@ -13,7 +13,7 @@ ork ne refait pas ce que l'app sait déjà faire (terminal, navigateur, fichiers
 | Pièce | Rôle |
 |---|---|
 | `output-styles/ork.md` | Le rôle du chef. Il s'ajoute au prompt par défaut de Claude Code, sans le remplacer. |
-| `agents/worker.md` | L'ouvrier : exécute un ticket dans un worktree isolé et rend un rapport court au format fixe. |
+| `agents/worker.md` | L'ouvrier : exécute un ticket dans un worktree isolé, tient ce ticket à jour et rend un rapport très court. |
 | `agents/critic.md` | Le contre-lecteur : relit une story à froid et rend trois objections au plus. |
 | `skills/` | Les procédures, chargées à la demande : `init`, `status`, `ticket`, `ideation`, `dispatch`, `review`, `integrate`, `stop`, `ui`. |
 | `hooks/` | Le mod d'affichage : badges, carte de sujet, boutons et panneau d'état. |
@@ -67,7 +67,7 @@ Pour le mode de permission, le mode **Auto** évite que chaque commande d'un ouv
 - **Il te demande trop, ou pas assez ?** Dis-le. Il propose une règle d'une ligne pour `## Ask before` ou `## No need to ask`, et l'écrit après ton accord. Push, force, dépôt principal sale et validation des plans restent hors dosage.
 - **Revue automatique** : avec `auto_review: [/simplify, /code-review medium --fix]`, chaque ouvrier passe ces revues avant de commiter. Avec `review: per-ticket`, le chef intègre seul un ticket sans plan dont la revue est propre. `review: required` dans un ticket force ta relecture.
 - **Note de confiance** : chaque point de relecture et chaque recommandation d'un ouvrier porte une note sur 10. `confidence_threshold: 8` laisse passer ce qui atteint 8, signalé par `[AUTO]`. Absent : tu vois tout. Les plans, `review: required` et `## Ask before` passent toujours par toi.
-- **Relecture guidée** : « relisons t12 » donne une vue d'ensemble triée par note, puis chaque point à relire. Le chef ouvre le diff ou le fichier dans les panneaux de l'app.
+- **Relecture guidée** : « relisons t12 » place le dépôt principal sur une branche `review/t12` et ouvre le panneau de modifications de l'app, puis donne une vue d'ensemble triée par note et chaque point à relire. Une seule relecture à la fois : rien ne se pose sur la branche d'intégration avant la fin de celle-ci.
 - **Intégration** : « intègre t12 » rebase la branche et la vérifie dans son worktree, la pose par avance rapide, puis archive le ticket et supprime le worktree.
 - **Le soir, ou avant de fermer** : dis « arrête-toi au prochain état stable », ou clique sur `Arrêt propre` dans le panneau. Le chef ne lance plus rien, les ouvriers commitent sur leur branche et rendent la main, puis il te dit que tu peux fermer et ce qu'il faudra reprendre. Ce qui n'est pas intégré attend sur sa branche.
 - **Conventions du projet** : ce qui est propre au projet va dans `CLAUDE.md`, que tous les ouvriers lisent : préparation d'un worktree, fichiers générés, vérifications, style de commit.

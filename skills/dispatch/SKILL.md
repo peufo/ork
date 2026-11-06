@@ -16,7 +16,7 @@ Quand des tickets sont `ready`, lance-les **sans redemander l'autorisation**, sa
 - en cas de doute, séquence. Un conflit de fusion coûte plus cher qu'une attente.
 
 **Plan ou exécution directe** :
-- si `plan_required: true`, ou si le ticket correspond aux règles `## Plan required when`, lance l'ouvrier en **PLAN MODE** et passe le ticket en `planning`. Le plan qu'il rend va dans la section `## Plan`, puis le ticket passe en `plan-review` et tu présentes le plan au développeur, en **cinq lignes maximum** ;
+- si `plan_required: true`, ou si le ticket correspond aux règles `## Plan required when`, lance l'ouvrier en **PLAN MODE** et passe le ticket en `planning`. L'ouvrier écrit son plan dans `## Plan` et passe le ticket en `plan-review`. Tu présentes ensuite le plan au développeur, en **cinq lignes maximum** ;
 - après validation, relance **le même ouvrier** (via `SendMessage` à son identifiant) avec « Plan validé, passe en EXECUTION MODE », en ajoutant les corrections éventuelles ;
 - sinon, lance directement en **EXECUTION MODE**.
 
@@ -34,7 +34,7 @@ En cas de doute entre deux lignes, prends la plus haute. Un ouvrier relancé par
 
 **Le message de délégation** à `ork:worker` contient toujours :
 1. le mode (`PLAN MODE` ou `EXECUTION MODE`) ;
-2. le **contenu complet du ticket**, recopié. L'ouvrier travaille dans un worktree qui ne contient pas forcément tes fichiers de tickets non commités ;
+2. `TICKET FILE: <chemin absolu>`, le fichier du ticket dans le dépôt principal. L'ouvrier le lit et le met à jour lui-même ;
 3. la `integration_branch`, la commande de tests et les notes utiles de `.ork/config.md` ;
 4. en EXECUTION MODE, la ligne `AUTO REVIEW: <commands>` si `auto_review` est configuré.
 
@@ -42,12 +42,14 @@ Fais commencer la `description` du lancement par l'identifiant du ticket (`t38 p
 
 # Quand un ouvrier rend compte
 
+Le rapport est court : l'ouvrier a déjà mis son ticket à jour. Relis le ticket avant de décider. S'il est resté à jour, ne le réécris pas. Si le rapport contient `TICKET NOT UPDATED`, l'écriture lui a été refusée : reporte toi-même dans le ticket ce que dit le rapport, et ajoute `[WARN]` à ta réponse.
+
 Pour chaque rapport :
-- `STATUS: PLAN READY` : plan dans le ticket, statut `plan-review`, **urgent** ;
-- `STATUS: BLOCKED` : question dans `## Questions`, statut `blocked`, **urgent**. Exception : si la `confidence` de la recommandation atteint `confidence_threshold`, note la réponse dans `## Questions` avec `(auto N/10)`, relance l'ouvrier par `SendMessage` avec cette réponse, et ajoute une ligne `` [AUTO] `t14-export-pdf` : garder l'export CSV (9/10) `` à ta prochaine réponse. Le statut repasse à `in-progress` ;
-- `STATUS: DONE` : résumé dans le journal, `branch:` remplie, `AUTO REVIEW` et `REVIEW FIRST` recopiés dans `## Review`, en cochant d'office les points qui atteignent `confidence_threshold`, statut `in-review`. Puis décide de la relecture (ci-dessous) ;
-- `STATUS: FAILED` : cause dans le journal, **urgent**, avec ta proposition (relancer un cran au-dessus, découper, abandonner). Si une règle de `## No need to ask` couvre ta proposition, applique-la et signale-la ;
-- `STATUS: PAUSED` : l'ouvrier s'est arrêté à ta demande. Note dans le journal où il en est, et laisse le ticket dans son statut. Reprendre, c'est relancer **le même ouvrier** par `SendMessage` (« reprends »), ou, s'il n'est plus joignable, suivre `ork:integrate` ;
+- `STATUS: PLAN READY` : **urgent** ;
+- `STATUS: BLOCKED` : **urgent**. Exception : si la `confidence` de la recommandation atteint `confidence_threshold`, note la réponse dans `## Questions` avec `(auto N/10)`, repasse le statut à `in-progress`, relance l'ouvrier par `SendMessage` avec cette réponse, et ajoute une ligne `` [AUTO] `t14-export-pdf` : garder l'export CSV (9/10) `` à ta prochaine réponse ;
+- `STATUS: DONE` : coche d'office dans `## Review` les points qui atteignent `confidence_threshold`, puis décide de la relecture (ci-dessous) ;
+- `STATUS: FAILED` : **urgent**, avec ta proposition (relancer un cran au-dessus, découper, abandonner). Si une règle de `## No need to ask` couvre ta proposition, applique-la et signale-la ;
+- `STATUS: PAUSED` : l'ouvrier s'est arrêté à ta demande, et le ticket garde son statut. Reprendre, c'est relancer **le même ouvrier** par `SendMessage` (« reprends »), ou, s'il n'est plus joignable, suivre `ork:integrate` ;
 - **fin sans rapport sur une erreur d'API** (limite d'usage, surcharge) : la notification d'échec nomme l'erreur et ne contient pas de ligne `STATUS:`. Ce n'est pas un `FAILED` : l'ouvrier a été coupé. Note-le dans le journal, laisse le ticket dans son statut, et ajoute `` [STOP] `t13-slug` : limite d'usage, « reprends t13 » après le reset ``. Reprendre, c'est relancer **le même ouvrier** par `SendMessage` (« reprends là où tu t'es arrêté »), sans cran au-dessus. Ne lance rien de nouveau avant le reset de la limite.
 
 Quand le développeur répond à une question, mets le ticket à jour, puis relance l'ouvrier concerné via `SendMessage`. S'il n'est plus joignable, charge `ork:integrate`.
@@ -56,11 +58,11 @@ Puis vérifie si un ticket `ready` en attente peut maintenant partir.
 
 **Relecture ou intégration directe.** Après un `DONE`, intègre **sans attendre le développeur** (charge `ork:integrate`) si toutes ces conditions sont réunies :
 - `review: per-ticket` dans `.ork/config.md`, et pas de `review: required` dans le ticket ;
-- aucune règle de `## Review required when` ne s'applique, d'après le ticket, le `SUMMARY` de l'ouvrier et les fichiers touchés (`git diff --name-only <integration_branch>...<branch>`). Si une règle s'applique, pose `review: required` ;
+- aucune règle de `## Review required when` ne s'applique, d'après le ticket et les fichiers touchés (`git diff --name-only <integration_branch>...<branch>`). Si une règle s'applique, pose `review: required` ;
 - aucune règle de `## Ask before` ne couvre l'intégration de ce ticket ;
 - le ticket n'est pas passé par un plan ;
-- toutes les commandes de `AUTO REVIEW` ont tourné, et aucune n'est `unavailable` ;
-- aucun point `remaining` ni `REVIEW FIRST` sous `confidence_threshold` (sans seuil : les deux valent `none`). Ceux qui l'atteignent sont cochés d'office dans `## Review` ;
+- toutes les commandes de `AUTO REVIEW` ont tourné, et `## Review` n'en note aucune `unavailable` ;
+- aucun point de `## Review` sous `confidence_threshold` (sans seuil : aucun point). Ceux qui l'atteignent sont cochés d'office ;
 - les tests sont verts après le rebase.
 
 L'intégration réussie donne `` [OK] `t12-slug` -> `main` : sans relecture `` dans ta prochaine réponse. Si une condition manque, ou si l'intégration s'arrête en route, le ticket reste `in-review`, avec `` [NOTE] `t12-slug` : <ce qui demande la relecture> ``.

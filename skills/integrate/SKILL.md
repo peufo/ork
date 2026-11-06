@@ -19,7 +19,7 @@ Deux règles ne se négocient pas, parce que rien ne se rattrape :
 
 Toutes les commandes passent par `git -C <path>`.
 
-1. **Repérer.** `git worktree list --porcelain` : le premier bloc est le dépôt principal. Il doit être sur `integration_branch`, et `git status --short` doit être vide, fichiers non suivis compris. Seuls `.ork/config.md`, `.ork/tickets/` et `.claude/launch.json`, que l'app peut créer seule, sont tolérés. Sinon, avertis en nommant la branche ou les fichiers, et arrête-toi.
+1. **Repérer.** `git worktree list --porcelain` : le premier bloc est le dépôt principal. S'il est sur `review/*`, une relecture est ouverte : ne pose rien, note `pose en attente` dans le journal du ticket, et arrête-toi sans avertir. `ork:review` reprend cette pose à la fermeture. Sinon, il doit être sur `integration_branch`, et `git status --short` doit être vide, fichiers non suivis compris. Seuls `.ork/config.md`, `.ork/tickets/` et `.claude/launch.json`, que l'app peut créer seule, sont tolérés. Sinon, avertis en nommant la branche ou les fichiers, et arrête-toi.
 2. **Vérifier qu'aucune session ne tourne** dans le worktree visé. Les indices :
    - un verrou (`locked`) dont le pid est vivant (`ps -p <pid>`) et n'est pas le tien ;
    - une session dans ce dossier selon `ListAgents` ;
@@ -35,7 +35,7 @@ Toutes les commandes passent par `git -C <path>`.
 4. **Sinon, INTEGRATION MODE.** Relance l'ouvrier du ticket par `SendMessage` s'il est joignable. Sinon, ou pour un worktree hors ticket, lance un nouvel `ork:worker` (modèle `opus`) avec :
    - `INTEGRATION MODE`, `WORKTREE: <path>` et `BRANCH: <name>` ;
    - `integration_branch`, la commande de tests et les notes ;
-   - le ticket complet, s'il y en a un.
+   - `TICKET FILE: <chemin absolu>`, s'il y a un ticket.
 
    Le ticket reste `in-review`. Traite le rapport selon `ork:dispatch`, puis reviens ici.
 5. **Poser.** Revérifie que le dépôt principal est propre : le développeur a pu y toucher entre-temps. S'il ne l'est plus, arrête-toi comme à l'étape 1. Puis `git merge --ff-only <branch>`. Si l'avance rapide est refusée, c'est que `integration_branch` a avancé : retour à l'étape 4.
@@ -52,7 +52,7 @@ Toutes les commandes passent par `git -C <path>`.
    - pid vivant d'une autre session, ou session courante dans ce worktree : laisse la suppression au développeur et donne-lui les commandes.
 8. **Rendre compte**, en lignes d'état, par intégration :
    - `` [OK] `<id>-<slug>` -> `<integration_branch>` ``, avec en complément les seuls conflits tranchés ; ou `` [FAIL] `<id>-<slug>` : <où ça s'est arrêté> `` ;
-   - une ligne `[HINT]` par consigne du `FOR THE DEVELOPER` de l'ouvrier ;
+   - une ligne `[HINT]` par action que l'ouvrier a notée pour le développeur dans le journal ;
    - `[WARN]` si la suppression revient au développeur, avec les commandes.
 
    Le nombre de commits, les tests verts et la suppression du worktree vont dans le journal du ticket, pas dans la réponse.
@@ -63,7 +63,7 @@ Si l'ouvrier n'est plus joignable (session redémarrée, identifiant perdu, `Sen
 1. repère son ancien worktree avec `git worktree list` ;
 2. s'il contient des modifications non commitées (`git -C <path> status --porcelain`), arrête-toi et demande au développeur quoi en faire. Ne force rien ;
 3. sinon, supprime l'ancien worktree avec `git worktree remove <path>`. La branche reste ;
-4. lance un nouvel `ork:worker` avec le ticket complet (journal et réponses compris) et la ligne `EXISTING BRANCH: <name>`.
+4. lance un nouvel `ork:worker` avec `TICKET FILE: <chemin absolu>` et la ligne `EXISTING BRANCH: <name>`.
 
 Cette procédure sert à **reprendre l'implémentation**. Pour une intégration, ne supprime rien : le INTEGRATION MODE travaille dans l'ancien worktree.
 

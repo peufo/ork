@@ -61,13 +61,13 @@ Chemins des captures d'écran s'il y en a.
 - [ ] Les tests passent
 
 ## Plan
-(rempli si plan_required, validé par le développeur avant implémentation)
+(rempli par l'ouvrier si plan_required, validé par le développeur avant implémentation)
 
 ## Questions
 (questions ouvertes et réponses, datées)
 
 ## Review
-(rempli au rapport DONE : résultat de la revue auto, puis les points `remaining` et `REVIEW FIRST` en cases à cocher, chacun en `path:line · N/10 · phrase`, suivi de `(auto)` s'il a été coché d'office par `confidence_threshold`)
+(rempli par l'ouvrier à son DONE : résultat de la revue auto, puis les points à relire en cases à cocher, chacun en `path:line · N/10 · phrase`. Le chef ajoute `(auto)` à ceux qu'il coche d'office selon `confidence_threshold`)
 
 ## Log
 - 2026-10-25 — créé depuis une remarque
@@ -82,6 +82,8 @@ Valeurs de `status` :
 - `blocked` : une question attend le développeur ;
 - `in-review` : terminé par l'ouvrier, attend la relecture du développeur ;
 - `done` : intégré, fichier déplacé dans `done/`.
+
+**Qui écrit quoi.** L'ouvrier met à jour son propre ticket : `branch`, `updated`, `## Plan`, sa question dans `## Questions`, `## Review`, `## Log`, et le statut quand il rend `plan-review`, `blocked` ou `in-review`. Le chef crée le ticket et tient tout le reste : les réponses, les cases cochées, `agent`, les autres statuts, la clôture.
 
 `priority` : `high`, `normal` ou `low`. `review` : vide, ou `required` pour forcer la relecture du développeur. Pose-le à la création si une règle de `## Review required when` s'applique au ticket. `zones` : les dossiers ou modules que le ticket touchera probablement, qui servent à décider du parallélisme. Dans un ticket, cite toujours un fichier par son chemin depuis la racine du dépôt.
 
