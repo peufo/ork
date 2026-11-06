@@ -127,7 +127,7 @@ Un **sujet**, c'est tout ce qui attend une réponse du développeur : une questi
 - **Une remarque envoyée en passant** reçoit sa réponse en une ou deux lignes d'état, puis tu reviens au sujet en cours.
 - **Une enquête qui se termine pendant un autre sujet** s'annonce en une ligne d'état, sans changer de sujet : `` [NOTE] `t34-tapis-roulant` : enquête finie, faits notés dans le ticket ``. Sinon, le développeur peut la croire perdue.
 
-**Ordre de la file** : échec ou conflit, puis `blocked`, puis `plan-review`, puis `in-review`, puis l'idéation, puis les `idea`. À égalité, la `priority`, puis l'ancienneté. Reconstruis la file à partir des tickets, pas de ta mémoire de conversation.
+**Ordre de la file** : échec ou conflit, puis `blocked`, puis `plan-review`, puis `in-review`, puis l'idéation, puis les `idea`. À égalité, la `priority`, puis l'ancienneté. Un ticket `paused` n'est pas dans la file. Reconstruis la file à partir des tickets, pas de ta mémoire de conversation.
 
 # Les lignes d'état
 

@@ -7,9 +7,14 @@ export type TicketHead = {
   status: string
   priority: string
   dependsOn: readonly string[]
+  branch: string
+  agent: string
+  paused: string
 }
 
 const WAITING_ORDER = ['blocked', 'plan-review', 'in-review']
+const SUBJECT_STATUSES = [...WAITING_ORDER, 'idea']
+const PAUSABLE_STATUSES = ['idea', 'ready']
 const PRIORITY_ORDER = ['high', 'normal', 'low']
 
 const WAITING_ACTIONS: Record<string, { label: string; prefix: string; note: string }> = {
@@ -26,8 +31,8 @@ function parseList(value: string | undefined): string[] {
     .filter(item => item !== '')
 }
 
-/** Reads a ticket's frontmatter. `file` is the file's name in the tickets folder. */
-export function parseTicketHead(file: string, text: string): TicketHead | undefined {
+/** Reads the frontmatter's fields, or undefined when the text has none. */
+export function readFrontmatter(text: string): Map<string, string> | undefined {
   const lines = text.split('\n')
 
   if (lines[0]?.trim() !== '---') {
@@ -48,6 +53,17 @@ export function parseTicketHead(file: string, text: string): TicketHead | undefi
     }
   }
 
+  return fields
+}
+
+/** Reads a ticket's frontmatter. `file` is the file's name in the tickets folder. */
+export function parseTicketHead(file: string, text: string): TicketHead | undefined {
+  const fields = readFrontmatter(text)
+
+  if (fields === undefined) {
+    return undefined
+  }
+
   const id = fields.get('id')
   const status = fields.get('status')
 
@@ -62,7 +78,30 @@ export function parseTicketHead(file: string, text: string): TicketHead | undefi
     title: fields.get('title') ?? '',
     priority: fields.get('priority') ?? 'normal',
     dependsOn: parseList(fields.get('depends_on')),
+    branch: fields.get('branch') ?? '',
+    agent: fields.get('agent') ?? '',
+    paused: fields.get('paused') ?? '',
   }
+}
+
+/**
+ * Whether the developer set a ticket aside. Only a ticket nobody works on can be: one
+ * under way or waiting for an answer stays in sight whatever the field says.
+ */
+export function isPaused(ticket: TicketHead): boolean {
+  return ticket.paused !== '' && PAUSABLE_STATUSES.includes(ticket.status)
+}
+
+/** A ticket's name as the lead writes it: its file's name, without the extension. */
+export function ticketName(ticket: TicketHead): string {
+  return ticket.file.replace(/\.md$/, '')
+}
+
+/** The dependencies of a ticket that are still open. */
+export function openBlockers(ticket: TicketHead, tickets: readonly TicketHead[]): string[] {
+  const open = new Set(tickets.map(one => one.id))
+
+  return ticket.dependsOn.filter(id => open.has(id))
 }
 
 function rank(order: readonly string[], value: string): number {
@@ -100,12 +139,19 @@ export function isFocused(row: BoardRow, ticketsDir: string, focus: string | nul
   return normalizePath(focus) === `${ticketsDir}/${row.file}`
 }
 
+/** The tickets that wait for an answer from the developer, the next subject first. */
+export function subjectQueue(tickets: readonly TicketHead[]): TicketHead[] {
+  return tickets
+    .filter(ticket => SUBJECT_STATUSES.includes(ticket.status) && !isPaused(ticket))
+    .sort(byUrgency)
+}
+
 /** Sorts the open tickets into what the panel shows. */
 export function buildBoard(tickets: readonly TicketHead[], isStopping = false): Board {
   const sorted = [...tickets].sort(byUrgency)
-  const open = new Set(tickets.map(ticket => ticket.id))
+  const active = sorted.filter(ticket => !isPaused(ticket))
   const withStatus = (...statuses: string[]) =>
-    sorted.filter(ticket => statuses.includes(ticket.status))
+    active.filter(ticket => statuses.includes(ticket.status))
 
   return {
     isStopping,
@@ -125,7 +171,7 @@ export function buildBoard(tickets: readonly TicketHead[], isStopping = false): 
       note: ticket.status === 'planning' ? 'plan' : 'exécution',
     })),
     queued: withStatus('ready').map(ticket => {
-      const blockers = ticket.dependsOn.filter(id => open.has(id))
+      const blockers = openBlockers(ticket, tickets)
 
       return blockers.length > 0
         ? { ...row(ticket), note: `attend ${blockers.join(', ')}` }
@@ -134,6 +180,11 @@ export function buildBoard(tickets: readonly TicketHead[], isStopping = false): 
     ideas: withStatus('idea').map(ticket => ({
       ...row(ticket),
       action: { label: 'clarifier', text: `clarifions ${ticket.id}` },
+    })),
+    paused: sorted.filter(isPaused).map(ticket => ({
+      ...row(ticket),
+      reason: ticket.paused,
+      action: { label: 'reprendre', text: `sors ${ticket.id} de la pause` },
     })),
   }
 }

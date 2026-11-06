@@ -55,7 +55,7 @@ Pour le mode de permission, le mode **Auto** évite que chaque commande d'un ouv
 
 ## Une journée type
 
-- **Le matin** : `/ork` signale les ouvriers arrêtés et les worktrees à surveiller, puis présente un seul sujet. Le panneau montre le reste.
+- **Le matin** : `/ork` présente un seul sujet. Le panneau montre le reste : les tickets, avec leurs alertes (ouvrier arrêté, dépendance cassée, relecture ouverte), puis l'état des branches et des worktrees.
 - **Tu remarques un truc** : écris-le, avec une capture si tu veux. Tu reçois une ligne en retour et tu retournes à ce que tu faisais.
 - **Idéation** : tu parles normalement d'une story. Le chef l'écrit dans `<docs_dir>/story/`, propose un découpage et crée les tickets après ton accord.
 - **Les travaux partent seuls** : il décide de ce qui part en parallèle, selon les `zones`, `depends_on` et `max_parallel`.

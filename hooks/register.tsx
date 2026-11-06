@@ -4,20 +4,22 @@ import type { EngineInterface, Register } from 'claude-code'
 import type { AgentActivity, BoardRow } from '../types'
 
 import { agentName, describeToolCall, ticketOfDescription } from './activity'
+import { collectStatus, isOrkProject, readTickets, STOP_FILE, TICKETS_DIR } from './collect'
 import { parseMessage } from './parse'
 import type { Action } from './parse'
-import { buildBoard, isFocused, parseTicketHead } from './tickets'
-import type { TicketHead } from './tickets'
+import { buildHealth, NO_CONFIG_SNAPSHOT, renderSnapshot } from './status'
+import type { StatusReport } from './status'
+import { buildBoard, isFocused } from './tickets'
 
 const PANE = 'ork'
-const CONFIG = '.ork/config.md'
-const TICKETS_DIR = '.ork/tickets'
-const STOP_FILE = `${TICKETS_DIR}/.stop`
+const STATUS_SKILL = 'ork:status'
 const START_SKILL = 'ork:start'
 const START_PROMPT = 'démarre ork'
 const STOP_PROMPT = 'arrête-toi au prochain état stable'
+const HEALTH_PERIOD_MS = 15_000
 
 const boardAtom = atom({ plugin: 'ork', key: 'board' } as const, null)
+const healthAtom = atom({ plugin: 'ork', key: 'health' } as const, null)
 const focusAtom = atom({ plugin: 'ork', key: 'focus' } as const, null)
 const activityAtom = atom({ plugin: 'ork', key: 'activity' } as const, {})
 const answeredAtom = atom({ plugin: 'ork', key: 'answered' } as const, [])
@@ -51,28 +53,52 @@ function keepLineBreaks(markdown: string): string {
 }
 
 async function refreshBoard($: EngineInterface): Promise<void> {
-  const isOrkProject = (await $.fs.exists(CONFIG)) && (await $.fs.exists(TICKETS_DIR))
-
-  if (!isOrkProject) {
+  if (!(await isOrkProject($))) {
     await update($, boardAtom, () => null)
 
     return
   }
 
-  const entries = await $.fs.list(TICKETS_DIR)
-  const heads = await Promise.all(
-    entries
-      .filter(entry => entry.kind === 'file' && entry.name.endsWith('.md'))
-      .map(async entry =>
-        parseTicketHead(entry.name, await $.fs.read(`${TICKETS_DIR}/${entry.name}`)),
-      ),
-  )
+  const tickets = await readTickets($)
   const board = buildBoard(
-    heads.filter((head): head is TicketHead => head !== undefined),
+    tickets.map(ticket => ticket.head),
     await $.fs.exists(STOP_FILE),
   )
 
   await update($, boardAtom, () => board)
+}
+
+/** Reads the state that calls git, and redraws the panel only if it changed. */
+async function refreshHealth($: EngineInterface): Promise<StatusReport | null> {
+  const report = await collectStatus($)
+  const previous = await read($, healthAtom)
+  const computed = report === null ? { alerts: {}, git: null } : buildHealth(report)
+  // A git call that fails for once must not erase the section: its last state stays.
+  const health =
+    report !== null && computed.git === null ? { ...computed, git: previous?.git ?? null } : computed
+
+  if (JSON.stringify(previous) !== JSON.stringify(health)) {
+    await update($, healthAtom, () => health)
+  }
+
+  return report
+}
+
+let isTicking = false
+
+/** Keeps the panel true to what happens out of the lead's turns, once the lead has started. */
+async function tick($: EngineInterface): Promise<void> {
+  if (isTicking || (await read($, healthAtom)) === null) {
+    return
+  }
+
+  isTicking = true
+
+  try {
+    await refreshHealth($)
+  } finally {
+    isTicking = false
+  }
 }
 
 async function openPanel($: EngineInterface): Promise<boolean> {
@@ -83,6 +109,8 @@ async function openPanel($: EngineInterface): Promise<boolean> {
   }
 
   await $.ui.open({ id: PANE, title: 'ork' })
+  // The panel works without what git says: a failure here leaves that section out.
+  await refreshHealth($).catch(() => null)
 
   return true
 }
@@ -155,6 +183,12 @@ export const register: Register = on => {
       description: "Démarrer le chef d'ork dans cette session et ouvrir son panneau",
     })
 
+    if (e.isInteractive) {
+      $.clock.every(HEALTH_PERIOD_MS, () => {
+        void tick($).catch(() => undefined)
+      })
+    }
+
     return started
   })
 
@@ -169,6 +203,15 @@ export const register: Register = on => {
     })
 
     return { text: "Panneau d'ork ouvert." }
+  })
+
+  // A failure here leaves the skill's own text, which tells the lead what to do without it.
+  on('skill.prompt', { skill: STATUS_SKILL }, async ($, e, next) => {
+    const computed = await next(e)
+    const report = await refreshHealth($)
+    const snapshot = report === null ? NO_CONFIG_SNAPSHOT : renderSnapshot(report)
+
+    return { text: `${computed.text}\n\n${snapshot}` }
   })
 
   on('agent.spawn', async ($, e, next) => {
@@ -195,6 +238,11 @@ export const register: Register = on => {
     }
 
     await refreshBoard($)
+
+    // Only the lead's own turns: a worker's would run git at each of its steps.
+    if (e.agentId === undefined && (await read($, healthAtom)) !== null) {
+      await refreshHealth($).catch(() => null)
+    }
 
     const subject = e.agentId === undefined ? parseMessage(e.answer ?? '')?.subject : undefined
 
@@ -244,16 +292,29 @@ export const register: Register = on => {
     const board = await read($, boardAtom)
     const focus = await read($, focusAtom)
     const activity = await read($, activityAtom)
+    const health = await read($, healthAtom)
+    const git = health?.git ?? null
 
     if (board === null) {
       return <Text dimColor>Pas de projet ork ici.</Text>
     }
 
+    const actionButton = (action: { label: string; text: string }) => (
+      <Button
+        key={action.text}
+        label={action.label}
+        onPress={() => {
+          void $.prompt.submit({ text: action.text, asUser: true })
+        }}
+      />
+    )
     const agents = Object.entries(activity).map(([key, agent]) => ({ key, ...agent }))
+    // A board kept from before a reload may not have this section yet.
+    const paused = board.paused ?? []
     const others = agents.filter(
       agent =>
         agent.ticket === null ||
-        ![...board.waiting, ...board.running, ...board.queued, ...board.ideas].some(
+        ![...board.waiting, ...board.running, ...board.queued, ...board.ideas, ...paused].some(
           row => row.id === agent.ticket,
         ),
     )
@@ -271,6 +332,8 @@ export const register: Register = on => {
           <Text bold>{`${title} (${rows.length})`}</Text>
           {rows.map(row => {
             const focused = isFocused(row, TICKETS_DIR, focus)
+            const alert = health?.alerts[row.id]
+            const action = alert?.action ?? row.action
 
             return (
               <Box key={focused ? `focused-${row.id}` : row.id} flexDirection="column">
@@ -279,21 +342,11 @@ export const register: Register = on => {
                   {focused && <Text color="suggestion">●</Text>}
                   <Box flexGrow={1} />
                   {row.note !== undefined && <Text dimColor>{row.note}</Text>}
-                  {row.action && (
-                    <Button
-                      key={row.action.text}
-                      label={row.action.label}
-                      onPress={() => {
-                        const text = row.action?.text
-
-                        if (text !== undefined) {
-                          void $.prompt.submit({ text, asUser: true })
-                        }
-                      }}
-                    />
-                  )}
+                  {action && actionButton(action)}
                 </Box>
                 <Text dimColor={!focused}>{row.title}</Text>
+                {row.reason !== undefined && <Text dimColor>{row.reason}</Text>}
+                {alert && <Text color="warning">{alert.text}</Text>}
                 {agents
                   .filter(agent => agent.ticket === row.id)
                   .map(agent => loader(agent.key, `${agent.name} · ${agent.text}`))}
@@ -307,6 +360,7 @@ export const register: Register = on => {
         board.running.length +
         board.queued.length +
         board.ideas.length +
+        paused.length +
         others.length ===
       0
 
@@ -324,6 +378,7 @@ export const register: Register = on => {
         )}
         {section('Prêts', board.queued)}
         {section('Idées', board.ideas)}
+        {section('En pause', paused)}
         {!board.isStopping && agents.length + board.running.length > 0 && (
           <Button
             key="stop"
@@ -332,6 +387,28 @@ export const register: Register = on => {
               void $.prompt.submit({ text: STOP_PROMPT, asUser: true })
             }}
           />
+        )}
+        {git && (
+          <Box key="git" flexDirection="column" rowGap={1}>
+            <Text bold>Git</Text>
+            <Box flexDirection="column">
+              <Text mono wrap="truncate-end">{`● ${git.trunk.name}`}</Text>
+              {git.trunk.detail !== '' && <Text dimColor>{git.trunk.detail}</Text>}
+            </Box>
+            {git.rows.map((row, index) => (
+              <Box key={row.key} flexDirection="column">
+                <Box flexDirection="row" columnGap={1} alignItems="center">
+                  <Text mono wrap="truncate-end">
+                    {`${index === git.rows.length - 1 ? '└' : '├'} ${row.name}`}
+                  </Text>
+                  <Box flexGrow={1} />
+                  {row.action && actionButton(row.action)}
+                </Box>
+                {row.detail !== '' && <Text dimColor>{row.detail}</Text>}
+              </Box>
+            ))}
+            {git.hiddenBranches > 0 && <Text dimColor>{`+ ${git.hiddenBranches} autres branches`}</Text>}
+          </Box>
         )}
       </Box>
     )

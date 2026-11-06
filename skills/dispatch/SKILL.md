@@ -10,6 +10,7 @@ Si `.ork/tickets/.stop` existe, un arrêt propre est en cours : ne lance rien et
 Quand des tickets sont `ready`, lance-les **sans redemander l'autorisation**, sauf si une règle de `## Ask before` couvre le ticket ou si le développeur a dit le contraire.
 
 **Parallèle ou séquence**, c'est ta décision :
+- ne lance jamais un ticket dont `paused` est rempli, même si sa dépendance vient d'être intégrée ;
 - ne lance jamais un ticket dont une dépendance (`depends_on`) n'est pas `done`, ni en PLAN MODE ni en EXECUTION MODE : l'ouvrier part de `integration_branch` et ne verrait pas le code dont il dépend. Le ticket reste `ready` et part dès que sa dépendance est intégrée ;
 - ne lance jamais en parallèle deux tickets dont les `zones` se recoupent. Le second attend que le premier soit intégré ;
 - respecte `max_parallel` (2 par défaut) ;

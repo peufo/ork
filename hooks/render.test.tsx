@@ -154,6 +154,141 @@ test('the panel says when a clean stop is under way, and hides its button', asyn
   await ui.unmount()
 })
 
+test('the panel puts an alert on its ticket, and git at the end', async ($, on) => {
+  const submitted: string[] = []
+  on('prompt.submit', (_, e) => {
+    submitted.push(e.text)
+    return { text: e.text }
+  })
+  on('state.get', (_, e) => ({
+    value: {
+      value:
+        e.key === 'board'
+          ? BOARD
+          : e.key === 'activity'
+            ? {}
+            : e.key === 'health'
+              ? {
+                  alerts: {
+                    t15: {
+                      text: 'ouvrier arrêté',
+                      action: { label: 'reprendre', text: 'reprends t15' },
+                    },
+                  },
+                  git: {
+                    trunk: { name: 'dev', detail: 'à jour avec origin' },
+                    rows: [
+                      {
+                        key: 'worktree-x',
+                        name: 'x',
+                        detail: '1 en avance',
+                        action: { label: 'intégrer', text: 'intègre x' },
+                      },
+                    ],
+                    hiddenBranches: 2,
+                  },
+                }
+              : null,
+      version: 1,
+    },
+  }))
+
+  const ui = await $.ui.mount(PANE)
+
+  expect((await ui.find({ type: 'Text', text: /ouvrier arrêté/ }))?.text).toBe('ouvrier arrêté')
+  expect((await ui.find({ type: 'Text', text: /^Git$/ }))?.text).toBe('Git')
+  expect((await ui.find({ type: 'Text', text: /● dev/ }))?.text).toBe('● dev')
+  expect((await ui.find({ type: 'Text', text: /└ x/ }))?.text).toBe('└ x')
+  expect((await ui.find({ type: 'Text', text: /autres branches/ }))?.text).toBe('+ 2 autres branches')
+  await ui.press({ key: 'reprends t15' })
+  await ui.press({ key: 'intègre x' })
+  expect(submitted).toEqual(['reprends t15', 'intègre x'])
+  await ui.unmount()
+})
+
+test('the panel shows the paused tickets and their reason', async ($, on) => {
+  const submitted: string[] = []
+  on('prompt.submit', (_, e) => {
+    submitted.push(e.text)
+    return { text: e.text }
+  })
+  on('state.get', (_, e) => ({
+    value: {
+      value:
+        e.key === 'board'
+          ? {
+              ...BOARD,
+              paused: [
+                {
+                  file: 't30-a.md',
+                  id: 't30',
+                  title: 'Importer',
+                  reason: "jusqu'à t34",
+                  action: { label: 'reprendre', text: 'sors t30 de la pause' },
+                },
+              ],
+            }
+          : e.key === 'activity'
+            ? {}
+            : null,
+      version: 1,
+    },
+  }))
+
+  const ui = await $.ui.mount(PANE)
+
+  expect((await ui.find({ type: 'Text', text: /En pause/ }))?.text).toBe('En pause (1)')
+  expect((await ui.find({ type: 'Text', text: /jusqu'à t34/ }))?.text).toBe("jusqu'à t34")
+  await ui.press({ key: 'sors t30 de la pause' })
+  expect(submitted).toEqual(['sors t30 de la pause'])
+  await ui.unmount()
+})
+
+test('the status skill gets the state computed, typed or loaded by the tool', async ($, on) => {
+  const TICKET = '---\nid: t1\ntitle: T\nstatus: blocked\n---\n\n## Questions\nla question ?\n'
+  on('skill.prompt', () => ({ text: 'Le skill.' }))
+  on('fs.exists', (_, e) => ({ value: !e.path.endsWith('.stop') }))
+  on('fs.list', (_, e) => ({
+    value: e.path.endsWith('.ork/tickets') ? [{ name: 't1-a.md', kind: 'file' }] : [],
+  }))
+  on('fs.read', (_, e) => ({
+    value: e.path.endsWith('.ork/config.md') ? '---\nintegration_branch: dev\n---\n' : TICKET,
+  }))
+  on('agent.list', () => ({ value: [] }))
+  on('clock.now', () => ({ value: 1_000_000_000 }))
+  on('process.run', () => ({
+    value: { exitCode: 0, stdout: 'worktree /repo\nbranch refs/heads/dev\n\n', stderr: '' },
+  }))
+  on('state.get', () => ({ value: { value: null, version: 1 } }))
+  on('state.set', () => ({ value: { isSet: true, version: 2 } }))
+
+  const { text } = await $.skill.prompt({ skill: 'ork:status', text: 'Le skill.', frontmatter: {} })
+
+  expect(text).toContain('Le skill.\n\nork_status: ok')
+  expect(text).toContain('integration_branch: dev')
+  expect(text).toContain('first_subject: t1-a (blocked)')
+  expect(text).toContain('la question ?')
+})
+
+test('the status skill says when the project has no config', async ($, on) => {
+  on('skill.prompt', () => ({ text: 'Le skill.' }))
+  on('fs.exists', () => ({ value: false }))
+  on('state.set', () => ({ value: { isSet: true, version: 2 } }))
+  on('state.get', () => ({ value: { value: null, version: 1 } }))
+
+  const { text } = await $.skill.prompt({ skill: 'ork:status', text: 'Le skill.', frontmatter: {} })
+
+  expect(text).toBe('Le skill.\n\nork_status: no_config')
+})
+
+test('other skills are left alone', async ($, on) => {
+  on('skill.prompt', () => ({ text: 'Autre.' }))
+
+  const { text } = await $.skill.prompt({ skill: 'ork:ticket', text: 'Autre.', frontmatter: {} })
+
+  expect(text).toBe('Autre.')
+})
+
 const orkEngine = (on: Parameters<TestBody>[1]) => {
   const opened: string[] = []
   let answer: (text: string) => void = () => {}
@@ -173,6 +308,7 @@ const orkEngine = (on: Parameters<TestBody>[1]) => {
     return { value: { isSet: true, version } }
   })
   on('clock.after', () => ({ value: undefined }))
+  on('clock.every', () => ({ value: undefined }))
   on('ui.open', (_, e) => {
     opened.push(e.id)
     return { value: { isPlaced: true } }

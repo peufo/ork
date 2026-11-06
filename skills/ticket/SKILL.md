@@ -47,6 +47,7 @@ effort: medium
 zones: [src/lib/components/facture, src/routes/factures]
 branch:
 agent:
+paused:
 created: 2026-10-25
 updated: 2026-10-25
 ---
@@ -86,6 +87,8 @@ Valeurs de `status` :
 **Qui écrit quoi.** L'ouvrier met à jour son propre ticket : `branch`, `updated`, `## Plan`, sa question dans `## Questions`, `## Review`, `## Log`, et le statut quand il rend `plan-review`, `blocked` ou `in-review`. Le chef crée le ticket et tient tout le reste : les réponses, les cases cochées, `agent`, les autres statuts, la clôture.
 
 `priority` : `high`, `normal` ou `low`. `review` : vide, ou `required` pour forcer la relecture du développeur. Pose-le à la création si une règle de `## Review required when` s'applique au ticket. `zones` : les dossiers ou modules que le ticket touchera probablement, qui servent à décider du parallélisme. Dans un ticket, cite toujours un fichier par son chemin depuis la racine du dépôt.
+
+`paused` : vide, ou la raison en quelques mots (`jusqu'à l'intégration de t34`). Le développeur met de côté un ticket `idea` ou `ready` : il quitte la file des sujets, le panneau le montre sous « En pause », et il ne part pas. Pose ce champ dès qu'il le demande, et vide-le quand il l'en sort, en le notant dans le journal.
 
 `depends_on` : les `id` des tickets qui doivent être `done` avant que celui-ci parte. N'en pose une que si le ticket a besoin du code de l'autre, pas pour un simple ordre de préférence. Avant de l'écrire, vérifie que chaque `id` existe (dans `.ork/tickets/` ou `done/`) et qu'elle ne crée pas de cycle. Si un ticket est abandonné alors que d'autres en dépendent, demande au développeur quoi faire de ceux-ci : retirer la dépendance, ou les abandonner aussi.
 
